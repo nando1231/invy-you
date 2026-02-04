@@ -11,6 +11,7 @@ import Financeiro from "./pages/Financeiro";
 import Rotinas from "./pages/Rotinas";
 import Metas from "./pages/Metas";
 import Configuracoes from "./pages/Configuracoes";
+import Instalar from "./pages/Instalar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/instalar" element={<Instalar />} />
       <Route
         path="/dashboard"
         element={
