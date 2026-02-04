@@ -54,7 +54,7 @@ serve(async (req) => {
       console.log("[CREATE-CHECKOUT] Existing customer found:", customerId);
     }
 
-    // Create subscription checkout with 3-day trial
+    // Create subscription checkout (no Stripe trial - using internal free trial)
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -65,9 +65,6 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      subscription_data: {
-        trial_period_days: 3,
-      },
       success_url: `${req.headers.get("origin")}/dashboard?subscription=success`,
       cancel_url: `${req.headers.get("origin")}/dashboard?subscription=cancelled`,
     });
