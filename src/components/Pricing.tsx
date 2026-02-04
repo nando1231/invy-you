@@ -1,61 +1,49 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, Zap, Crown, Rocket } from "lucide-react";
+import { Check, Crown, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const plans = [
   {
-    name: "Starter",
-    price: "Grátis",
-    period: "",
-    description: "Perfeito para começar a organizar sua vida",
-    icon: Zap,
-    features: [
-      "Dashboard básico",
-      "Até 10 tarefas/dia",
-      "Controle de 3 categorias",
-      "Relatório semanal",
-    ],
-    cta: "Começar Grátis",
-    variant: "outline" as const,
-    popular: false
-  },
-  {
-    name: "Pro",
-    price: "R$ 29",
+    name: "Mensal",
+    price: "R$ 29,90",
     period: "/mês",
-    description: "Para quem quer resultados reais",
+    description: "Flexibilidade total para testar",
     icon: Crown,
     features: [
-      "Tudo do Starter",
-      "Tarefas ilimitadas",
-      "Controle financeiro completo",
-      "Metas e Sprints 60 dias",
-      "Sistema de hábitos",
-      "Relatórios detalhados",
-      "Suporte prioritário"
+      "3 dias grátis para começar",
+      "Dashboard completo",
+      "Controle financeiro ilimitado",
+      "Tarefas e hábitos ilimitados",
+      "Metas e progresso",
+      "Acesso web + mobile (PWA)",
+      "Cancele quando quiser"
     ],
-    cta: "Assinar Pro",
-    variant: "hero" as const,
-    popular: true
+    cta: "Começar Grátis",
+    variant: "heroOutline" as const,
+    popular: false,
+    badge: null
   },
   {
-    name: "Elite",
-    price: "R$ 49",
-    period: "/mês",
-    description: "Máximo controle e performance",
-    icon: Rocket,
+    name: "Trimestral",
+    price: "R$ 45",
+    originalPrice: "R$ 89,70",
+    period: "/3 meses",
+    description: "Melhor custo-benefício",
+    icon: Sparkles,
     features: [
-      "Tudo do Pro",
-      "IA para sugestões",
-      "Mentoria personalizada",
-      "Múltiplos perfis",
-      "API de integrações",
-      "White-label",
-      "Suporte VIP 24/7"
+      "Tudo do plano mensal",
+      "50% de economia",
+      "Equivale a R$ 15/mês",
+      "3 dias grátis para começar",
+      "Compromisso com resultados",
+      "Acesso web + mobile (PWA)",
+      "Cancele quando quiser"
     ],
-    cta: "Ir para Elite",
-    variant: "heroOutline" as const,
-    popular: false
+    cta: "Economizar 50%",
+    variant: "hero" as const,
+    popular: true,
+    badge: "50% OFF"
   }
 ];
 
@@ -78,15 +66,15 @@ export const Pricing = () => {
             💎 PLANOS
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-4">
-            ESCOLHA SEU NÍVEL
+            ESCOLHA SEU PLANO
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-            Comece grátis. Evolua quando estiver pronto.
+            Comece com 3 dias grátis. Sem cartão para testar.
           </p>
         </motion.div>
 
         {/* Pricing Grid */}
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -95,14 +83,14 @@ export const Pricing = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className={`relative glass rounded-2xl p-6 sm:p-8 ${
-                plan.popular ? "border-2 border-primary glow-primary-subtle scale-105" : "border-glow"
+                plan.popular ? "border-2 border-primary glow-primary-subtle" : "border-glow"
               }`}
             >
               {/* Popular Badge */}
-              {plan.popular && (
+              {plan.badge && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <span className="bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
-                    MAIS POPULAR
+                    {plan.badge}
                   </span>
                 </div>
               )}
@@ -117,6 +105,9 @@ export const Pricing = () => {
 
               {/* Price */}
               <div className="mb-4">
+                {plan.originalPrice && (
+                  <span className="text-muted-foreground line-through text-lg mr-2">{plan.originalPrice}</span>
+                )}
                 <span className="text-4xl font-black text-foreground">{plan.price}</span>
                 <span className="text-muted-foreground">{plan.period}</span>
               </div>
@@ -135,9 +126,11 @@ export const Pricing = () => {
               </ul>
 
               {/* CTA */}
-              <Button variant={plan.variant} className="w-full" size="lg">
-                {plan.cta}
-              </Button>
+              <Link to="/auth">
+                <Button variant={plan.variant} className="w-full" size="lg">
+                  {plan.cta}
+                </Button>
+              </Link>
             </motion.div>
           ))}
         </div>
@@ -150,7 +143,7 @@ export const Pricing = () => {
           transition={{ delay: 0.5 }}
           className="text-center text-muted-foreground text-sm mt-8"
         >
-          ✅ Garantia de 7 dias • Cancele quando quiser • Sem fidelidade
+          ✅ 3 dias grátis • Cancele quando quiser • Sem fidelidade
         </motion.p>
       </div>
     </section>

@@ -11,6 +11,12 @@ interface SubscriptionState {
   error: string | null;
 }
 
+// Price IDs
+const PRICES = {
+  monthly: "price_1Sx9u2DLlJb4M4aZHmGGPdsf",    // R$29,90/mês
+  quarterly: "price_1Sx9z3DLlJb4M4aZ1XExqoNn",  // R$45/3 meses
+};
+
 export const useSubscription = () => {
   const { user } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
@@ -53,9 +59,11 @@ export const useSubscription = () => {
     }
   }, [user]);
 
-  const createCheckout = async () => {
+  const createCheckout = async (plan: "monthly" | "quarterly" = "monthly") => {
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId: PRICES[plan] }
+      });
       
       if (error) throw error;
       
