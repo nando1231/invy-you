@@ -4,7 +4,6 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select,
   SelectContent,
@@ -31,7 +30,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { format, isToday, parseISO, differenceInDays } from "date-fns";
+import { format, parseISO, differenceInDays } from "date-fns";
+import TaskTemplates from "@/components/rotinas/TaskTemplates";
+import HabitTemplates from "@/components/rotinas/HabitTemplates";
 
 interface Task {
   id: string;
@@ -100,7 +101,6 @@ const Rotinas = () => {
       .eq("user_id", user!.id);
 
     if (habitsData) {
-      // Get today's logs
       const today = format(new Date(), "yyyy-MM-dd");
       const { data: logsData } = await supabase
         .from("habit_logs")
@@ -111,7 +111,6 @@ const Rotinas = () => {
         const habitLogs = logsData?.filter(l => l.habit_id === habit.id) || [];
         const completedToday = habitLogs.some(l => l.completed_at === today);
         
-        // Calculate streak
         let streak = 0;
         const sortedLogs = habitLogs
           .map(l => l.completed_at)
@@ -167,6 +166,19 @@ const Rotinas = () => {
     }
   };
 
+  const handleQuickAddTask = async (title: string, priority: "low" | "medium" | "high") => {
+    const { error } = await supabase.from("tasks").insert({
+      user_id: user!.id,
+      title,
+      priority,
+    });
+
+    if (!error) {
+      toast({ title: "Tarefa adicionada!" });
+      fetchTasks();
+    }
+  };
+
   const handleAddHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -190,6 +202,18 @@ const Rotinas = () => {
     }
   };
 
+  const handleQuickAddHabit = async (name: string) => {
+    const { error } = await supabase.from("habits").insert({
+      user_id: user!.id,
+      name,
+    });
+
+    if (!error) {
+      toast({ title: "Hábito adicionado!" });
+      fetchHabits();
+    }
+  };
+
   const toggleTask = async (task: Task) => {
     const { error } = await supabase
       .from("tasks")
@@ -208,14 +232,12 @@ const Rotinas = () => {
     const today = format(new Date(), "yyyy-MM-dd");
     
     if (habit.completedToday) {
-      // Remove today's log
       await supabase
         .from("habit_logs")
         .delete()
         .eq("habit_id", habit.id)
         .eq("completed_at", today);
     } else {
-      // Add today's log
       await supabase.from("habit_logs").insert({
         habit_id: habit.id,
         user_id: user!.id,
@@ -250,57 +272,61 @@ const Rotinas = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Rotinas</h1>
-            <p className="text-muted-foreground">Organize seu dia e construa hábitos</p>
-          </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Rotinas</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Organize seu dia e construa hábitos</p>
         </div>
 
         {/* Progress */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-xl p-6 border-glow"
+          className="glass rounded-xl p-4 sm:p-6 border-glow"
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-foreground">Progresso de Hoje</h2>
-            <span className="text-primary font-bold">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="font-bold text-foreground text-sm sm:text-base">Progresso de Hoje</h2>
+            <span className="text-primary font-bold text-sm sm:text-base">
               {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
             </span>
           </div>
-          <div className="w-full bg-secondary rounded-full h-3">
+          <div className="w-full bg-secondary rounded-full h-2 sm:h-3">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
               transition={{ duration: 0.5 }}
-              className="bg-primary h-3 rounded-full"
+              className="bg-primary h-2 sm:h-3 rounded-full"
             />
           </div>
-          <p className="text-muted-foreground text-sm mt-2">
+          <p className="text-muted-foreground text-xs sm:text-sm mt-2">
             {completedTasks} de {totalTasks} tarefas concluídas
           </p>
         </motion.div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-secondary">
-            <TabsTrigger value="tasks">Tarefas</TabsTrigger>
-            <TabsTrigger value="habits">Hábitos</TabsTrigger>
+          <TabsList className="bg-secondary w-full sm:w-auto">
+            <TabsTrigger value="tasks" className="flex-1 sm:flex-none">Tarefas</TabsTrigger>
+            <TabsTrigger value="habits" className="flex-1 sm:flex-none">Hábitos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tasks" className="space-y-4 mt-4">
+            {/* Task Templates */}
+            <TaskTemplates 
+              onAddTask={handleQuickAddTask}
+              existingTasks={tasks.map(t => t.title)}
+            />
+
             {/* Add Task Button */}
             <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="hero">
+                <Button variant="hero" className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
-                  Nova Tarefa
+                  Nova Tarefa Personalizada
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-card border-border">
+              <DialogContent className="bg-card border-border mx-4 sm:mx-auto max-w-md">
                 <DialogHeader>
                   <DialogTitle>Nova Tarefa</DialogTitle>
                 </DialogHeader>
@@ -357,7 +383,7 @@ const Rotinas = () => {
             </Dialog>
 
             {/* Tasks List */}
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-2">
               <AnimatePresence>
                 {tasks.map((task) => (
                   <motion.div
@@ -365,35 +391,35 @@ const Rotinas = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className={`glass rounded-xl p-3 sm:p-4 border-glow flex items-center gap-2 sm:gap-4 ${
+                    className={`glass rounded-xl p-3 border-glow flex items-center gap-3 ${
                       task.is_completed ? "opacity-60" : ""
                     }`}
                   >
                     <button
                       onClick={() => toggleTask(task)}
-                      className="flex-shrink-0"
+                      className="flex-shrink-0 touch-manipulation"
                     >
                       {task.is_completed ? (
-                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                        <CheckCircle className="w-6 h-6 text-primary" />
                       ) : (
-                        <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground hover:text-primary transition-colors" />
+                        <Circle className="w-6 h-6 text-muted-foreground hover:text-primary transition-colors" />
                       )}
                     </button>
 
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-foreground text-sm sm:text-base ${
+                      <p className={`font-medium text-foreground text-sm ${
                         task.is_completed ? "line-through" : ""
                       }`}>
                         {task.title}
                       </p>
                       {task.description && (
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {task.description}
                         </p>
                       )}
                     </div>
 
-                    <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                       task.priority === "high" ? "bg-destructive" :
                       task.priority === "medium" ? "bg-yellow-500" : "bg-primary"
                     }`} />
@@ -411,24 +437,30 @@ const Rotinas = () => {
               </AnimatePresence>
 
               {tasks.length === 0 && (
-                <div className="text-center py-8 sm:py-12 text-muted-foreground">
-                  <p className="text-sm sm:text-base">Nenhuma tarefa ainda</p>
-                  <p className="text-xs sm:text-sm">Adicione sua primeira tarefa!</p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">Nenhuma tarefa ainda</p>
+                  <p className="text-xs">Clique nas sugestões acima ou crie uma personalizada!</p>
                 </div>
               )}
             </div>
           </TabsContent>
 
           <TabsContent value="habits" className="space-y-4 mt-4">
+            {/* Habit Templates */}
+            <HabitTemplates 
+              onAddHabit={handleQuickAddHabit}
+              existingHabits={habits.map(h => h.name)}
+            />
+
             {/* Add Habit Button */}
             <Dialog open={habitDialogOpen} onOpenChange={setHabitDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="hero">
+                <Button variant="hero" className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
-                  Novo Hábito
+                  Novo Hábito Personalizado
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-card border-border">
+              <DialogContent className="bg-card border-border mx-4 sm:mx-auto max-w-md">
                 <DialogHeader>
                   <DialogTitle>Novo Hábito</DialogTitle>
                 </DialogHeader>
@@ -451,7 +483,7 @@ const Rotinas = () => {
             </Dialog>
 
             {/* Habits List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <AnimatePresence>
                 {habits.map((habit) => (
                   <motion.div
@@ -459,23 +491,23 @@ const Rotinas = () => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className={`glass rounded-xl p-3 sm:p-4 border-glow ${
+                    className={`glass rounded-xl p-3 border-glow ${
                       habit.completedToday ? "border-primary" : ""
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3 min-w-0">
                         <button
                           onClick={() => toggleHabit(habit)}
-                          className={`p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 ${
+                          className={`p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation ${
                             habit.completedToday 
                               ? "bg-primary text-primary-foreground" 
                               : "bg-secondary text-muted-foreground hover:text-primary"
                           }`}
                         >
-                          <Star className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <Star className="w-5 h-5" />
                         </button>
-                        <span className="font-medium text-foreground text-sm sm:text-base truncate">{habit.name}</span>
+                        <span className="font-medium text-foreground text-sm truncate">{habit.name}</span>
                       </div>
                       <Button
                         variant="ghost"
@@ -486,8 +518,8 @@ const Rotinas = () => {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                    <div className="flex items-center gap-2 text-xs sm:text-sm">
-                      <Flame className={`w-3 h-3 sm:w-4 sm:h-4 ${habit.streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+                    <div className="flex items-center gap-2 text-xs">
+                      <Flame className={`w-4 h-4 ${habit.streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
                       <span className={habit.streak > 0 ? "text-orange-500 font-medium" : "text-muted-foreground"}>
                         {habit.streak} dias de sequência
                       </span>
@@ -497,9 +529,9 @@ const Rotinas = () => {
               </AnimatePresence>
 
               {habits.length === 0 && (
-                <div className="col-span-1 sm:col-span-2 text-center py-8 sm:py-12 text-muted-foreground">
-                  <p className="text-sm sm:text-base">Nenhum hábito ainda</p>
-                  <p className="text-xs sm:text-sm">Comece a construir seus hábitos!</p>
+                <div className="text-center py-8 text-muted-foreground col-span-full">
+                  <p className="text-sm">Nenhum hábito ainda</p>
+                  <p className="text-xs">Clique nas sugestões acima ou crie um personalizado!</p>
                 </div>
               )}
             </div>
