@@ -23,7 +23,6 @@ interface HabitTemplate {
 const defaultHabits: HabitTemplate[] = [
   { id: "exercise", name: "Exercício", icon: <Dumbbell className="w-4 h-4" /> },
   { id: "reading", name: "Leitura", icon: <Book className="w-4 h-4" /> },
-  { id: "meditation", name: "Meditação", icon: <Brain className="w-4 h-4" /> },
   { id: "water", name: "Beber água", icon: <Droplets className="w-4 h-4" /> },
   { id: "sleep", name: "Dormir cedo", icon: <Moon className="w-4 h-4" /> },
   { id: "healthy", name: "Comer saudável", icon: <Apple className="w-4 h-4" /> },
