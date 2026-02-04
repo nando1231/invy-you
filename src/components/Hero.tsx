@@ -79,10 +79,12 @@ export const Hero = () => {
               transition={{ delay: 0.7 }}
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
             >
-              <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                COMEÇAR AGORA
-                <ArrowRight className="w-5 h-5" />
-              </Button>
+              <a href="/auth">
+                <Button variant="hero" size="xl" className="w-full sm:w-auto">
+                  COMEÇAR AGORA
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </a>
               <p className="text-muted-foreground text-xs sm:text-sm">
                 Sem cartão para testar • Cancele quando quiser
               </p>
