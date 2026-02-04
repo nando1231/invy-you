@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Paywall } from "@/components/Paywall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -271,6 +272,7 @@ const Rotinas = () => {
   const totalTasks = tasks.length;
 
   return (
+    <Paywall>
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}
@@ -539,6 +541,7 @@ const Rotinas = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </Paywall>
   );
 };
 

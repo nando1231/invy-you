@@ -7,8 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Cavilha IA Pro - R$29,90/mês
-const PRICE_ID = "price_1Sx9u2DLlJb4M4aZHmGGPdsf";
+// Default price (monthly)
+const DEFAULT_PRICE_ID = "price_1Sx9u2DLlJb4M4aZHmGGPdsf";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,11 +21,26 @@ serve(async (req) => {
   );
 
   try {
+    // Parse request body for price ID
+    let priceId = DEFAULT_PRICE_ID;
+    try {
+      const body = await req.json();
+      if (body.priceId) {
+        priceId = body.priceId;
+      }
+    } catch {
+      // No body or invalid JSON, use default
+    }
+
+    console.log("[CREATE-CHECKOUT] Using price ID:", priceId);
+
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+
+    console.log("[CREATE-CHECKOUT] User authenticated:", user.email);
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
@@ -36,6 +51,7 @@ serve(async (req) => {
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log("[CREATE-CHECKOUT] Existing customer found:", customerId);
     }
 
     // Create subscription checkout with 3-day trial
@@ -44,7 +60,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -56,12 +72,14 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/dashboard?subscription=cancelled`,
     });
 
+    console.log("[CREATE-CHECKOUT] Session created:", session.id);
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error: unknown) {
-    console.error("Error creating checkout:", error);
+    console.error("[CREATE-CHECKOUT] Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
