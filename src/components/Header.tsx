@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Download } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,14 +17,14 @@ export const Header = () => {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg gradient-primary flex items-center justify-center">
               <span className="text-primary-foreground font-black text-lg sm:text-xl">C</span>
             </div>
             <span className="text-foreground font-bold text-lg sm:text-xl tracking-tight">
               CAVILHA<span className="text-primary">.IA</span>
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
@@ -40,12 +41,22 @@ export const Header = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Login
-            </Button>
-            <Button variant="hero" size="sm">
-              Começar Agora
-            </Button>
+            <Link to="/instalar">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="w-4 h-4" />
+                Instalar App
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button variant="ghost" size="sm">
+                Login
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button variant="hero" size="sm">
+                Começar Grátis
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -75,12 +86,22 @@ export const Header = () => {
                 FAQ
               </a>
               <div className="flex flex-col gap-2 pt-2">
-                <Button variant="ghost" size="sm">
-                  Login
-                </Button>
-                <Button variant="hero" size="sm">
-                  Começar Agora
-                </Button>
+                <Link to="/instalar">
+                  <Button variant="outline" size="sm" className="w-full gap-2">
+                    <Download className="w-4 h-4" />
+                    Instalar App
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm" className="w-full">
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button variant="hero" size="sm" className="w-full">
+                    Começar Grátis
+                  </Button>
+                </Link>
               </div>
             </nav>
           </motion.div>

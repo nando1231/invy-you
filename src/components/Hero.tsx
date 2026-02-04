@@ -1,13 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Smartphone, Calendar, TrendingUp } from "lucide-react";
+import { ArrowRight, Check, Smartphone, Calendar, TrendingUp, Download } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 
 export const Hero = () => {
   const features = [
-    "Setup em 5 min",
-    "Garantia 7 dias",
-    "Acesso web + mobile"
+    "3 dias grátis",
+    "Sem cartão para testar",
+    "Cancele quando quiser"
   ];
 
   return (
@@ -41,7 +42,7 @@ export const Hero = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 mb-6"
             >
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-primary text-sm font-medium">SISTEMA DE EXECUÇÃO</span>
+              <span className="text-primary text-sm font-medium">3 DIAS GRÁTIS</span>
             </motion.div>
 
             {/* Headline */}
@@ -79,15 +80,18 @@ export const Hero = () => {
               transition={{ delay: 0.7 }}
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
             >
-              <a href="/auth">
+              <Link to="/auth">
                 <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                  COMEÇAR AGORA
+                  COMEÇAR 3 DIAS GRÁTIS
                   <ArrowRight className="w-5 h-5" />
                 </Button>
-              </a>
-              <p className="text-muted-foreground text-xs sm:text-sm">
-                Sem cartão para testar • Cancele quando quiser
-              </p>
+              </Link>
+              <Link to="/instalar">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2">
+                  <Download className="w-5 h-5" />
+                  Instalar App
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
 
