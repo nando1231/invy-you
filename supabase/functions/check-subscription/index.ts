@@ -43,16 +43,51 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // First, check if user is in free trial period (no credit card required)
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("trial_ends_at, created_at")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profileError) {
+      logStep("Error fetching profile", { error: profileError.message });
+    }
+
+    const now = new Date();
+    
+    // Check free trial (no payment required)
+    if (profile?.trial_ends_at) {
+      const trialEndsAt = new Date(profile.trial_ends_at);
+      if (now < trialEndsAt) {
+        logStep("User is in free trial period", { trialEndsAt: profile.trial_ends_at });
+        return new Response(JSON.stringify({
+          subscribed: true,
+          is_trial: true,
+          is_free_trial: true, // New flag to indicate no-card trial
+          product_id: null,
+          subscription_end: profile.trial_ends_at,
+          trial_days_remaining: Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    }
+
+    // If free trial expired, check Stripe for paid subscription
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
-      logStep("No customer found, returning unsubscribed state");
+      logStep("No customer found and trial expired, returning unsubscribed state");
       return new Response(JSON.stringify({ 
         subscribed: false,
         is_trial: false,
+        is_free_trial: false,
         product_id: null,
-        subscription_end: null
+        subscription_end: null,
+        trial_expired: true
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -75,12 +110,14 @@ serve(async (req) => {
     );
 
     if (!activeSubscription) {
-      logStep("No active subscription found");
+      logStep("No active subscription found and trial expired");
       return new Response(JSON.stringify({ 
         subscribed: false,
         is_trial: false,
+        is_free_trial: false,
         product_id: null,
-        subscription_end: null
+        subscription_end: null,
+        trial_expired: true
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -101,6 +138,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       subscribed: true,
       is_trial: isTrial,
+      is_free_trial: false,
       product_id: productId,
       subscription_end: subscriptionEnd
     }), {

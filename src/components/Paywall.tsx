@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Crown, Lock, Loader2 } from "lucide-react";
+import { Crown, Lock, Loader2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useState } from "react";
@@ -10,7 +10,7 @@ interface PaywallProps {
 }
 
 export const Paywall = ({ children }: PaywallProps) => {
-  const { subscribed, loading, createCheckout } = useSubscription();
+  const { subscribed, loading, isFreeTrial, trialDaysRemaining, createCheckout } = useSubscription();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "quarterly">("quarterly");
 
@@ -35,11 +35,30 @@ export const Paywall = ({ children }: PaywallProps) => {
     );
   }
 
+  // User has access (subscribed or in free trial)
   if (subscribed) {
-    return <>{children}</>;
+    return (
+      <>
+        {/* Show trial banner if in free trial */}
+        {isFreeTrial && trialDaysRemaining !== null && (
+          <div className="bg-primary/10 border-b border-primary/20 px-4 py-2">
+            <div className="container mx-auto flex items-center justify-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-primary" />
+              <span className="text-foreground">
+                {trialDaysRemaining > 0 
+                  ? `Período de teste: ${trialDaysRemaining} dia${trialDaysRemaining !== 1 ? 's' : ''} restante${trialDaysRemaining !== 1 ? 's' : ''}`
+                  : 'Último dia do período de teste!'
+                }
+              </span>
+            </div>
+          </div>
+        )}
+        {children}
+      </>
+    );
   }
 
-  // User not subscribed - show paywall
+  // User not subscribed and trial expired - show paywall
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
@@ -57,7 +76,7 @@ export const Paywall = ({ children }: PaywallProps) => {
           </h1>
           
           <p className="text-muted-foreground mb-6">
-            Seu período de teste expirou. Assine o Cavilha IA para continuar organizando sua vida.
+            Seu período de teste de 3 dias expirou. Assine o Cavilha IA para continuar organizando sua vida.
           </p>
 
           {/* Plans */}
@@ -125,7 +144,7 @@ export const Paywall = ({ children }: PaywallProps) => {
           </Button>
 
           <p className="text-xs text-muted-foreground mt-4">
-            3 dias grátis • Cancele quando quiser
+            Pagamento seguro via Stripe • Cancele quando quiser
           </p>
         </div>
       </motion.div>

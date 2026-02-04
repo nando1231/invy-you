@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 interface SubscriptionState {
   subscribed: boolean;
   isTrial: boolean;
+  isFreeTrial: boolean;
+  trialDaysRemaining: number | null;
   productId: string | null;
   subscriptionEnd: string | null;
   loading: boolean;
@@ -22,6 +24,8 @@ export const useSubscription = () => {
   const [state, setState] = useState<SubscriptionState>({
     subscribed: false,
     isTrial: false,
+    isFreeTrial: false,
+    trialDaysRemaining: null,
     productId: null,
     subscriptionEnd: null,
     loading: true,
@@ -44,6 +48,8 @@ export const useSubscription = () => {
       setState({
         subscribed: data.subscribed ?? false,
         isTrial: data.is_trial ?? false,
+        isFreeTrial: data.is_free_trial ?? false,
+        trialDaysRemaining: data.trial_days_remaining ?? null,
         productId: data.product_id ?? null,
         subscriptionEnd: data.subscription_end ?? null,
         loading: false,
