@@ -31,6 +31,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ExpenseCharts from "@/components/financeiro/ExpenseCharts";
 
 interface Transaction {
   id: string;
@@ -334,6 +335,9 @@ const Financeiro = () => {
             </p>
           </motion.div>
         </div>
+
+        {/* Charts */}
+        <ExpenseCharts transactions={transactions} categories={categories} />
 
         {/* Transactions List */}
         <div className="glass rounded-xl border-glow overflow-hidden">

@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ReminderBanner from "@/components/notifications/ReminderBanner";
 
 interface Stats {
   income: number;
@@ -137,7 +138,8 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Reminder Banner */}
+        <ReminderBanner />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((stat, index) => (
             <motion.div
