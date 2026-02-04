@@ -68,7 +68,10 @@ export const useSubscription = () => {
       if (error) throw error;
       
       if (data?.url) {
-        window.open(data.url, "_blank");
+        // Use location.href for better compatibility - popup blockers often block window.open
+        window.location.href = data.url;
+      } else {
+        throw new Error("Checkout URL not received");
       }
     } catch (error) {
       console.error("Error creating checkout:", error);
@@ -83,7 +86,9 @@ export const useSubscription = () => {
       if (error) throw error;
       
       if (data?.url) {
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
+      } else {
+        throw new Error("Portal URL not received");
       }
     } catch (error) {
       console.error("Error opening customer portal:", error);
