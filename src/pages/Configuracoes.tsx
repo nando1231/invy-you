@@ -107,46 +107,46 @@ const Configuracoes = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-4 sm:space-y-6 max-w-2xl">
         {/* Header */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configurações</h1>
-          <p className="text-muted-foreground">Personalize sua experiência</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Configurações</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Personalize sua experiência</p>
         </div>
 
         {/* Profile Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-xl p-6 border-glow"
+          className="glass rounded-xl p-4 sm:p-6 border-glow"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <User className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <h2 className="font-bold text-foreground">Perfil</h2>
+            <h2 className="font-bold text-foreground text-sm sm:text-base">Perfil</h2>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome</Label>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-sm">Nome</Label>
               <Input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="bg-secondary"
+                className="bg-secondary text-sm sm:text-base"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Email</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-sm">Email</Label>
               <Input
                 value={user?.email || ""}
                 disabled
-                className="bg-secondary opacity-60"
+                className="bg-secondary opacity-60 text-sm sm:text-base"
               />
             </div>
 
-            <Button variant="default" onClick={handleUpdateProfile}>
+            <Button variant="default" onClick={handleUpdateProfile} className="w-full sm:w-auto">
               Salvar Alterações
             </Button>
           </div>
