@@ -140,44 +140,44 @@ const Dashboard = () => {
 
         {/* Reminder Banner */}
         <ReminderBanner />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {statCards.map((stat, index) => (
             <motion.div
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="glass rounded-xl p-4 sm:p-6 border-glow"
+              className="glass rounded-xl p-3 sm:p-4 lg:p-6 border-glow"
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <div className={`p-1.5 sm:p-2 rounded-lg ${stat.bgColor}`}>
+                  <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
                 </div>
               </div>
-              <p className="text-muted-foreground text-sm">{stat.title}</p>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">{stat.title}</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground truncate">{stat.value}</p>
             </motion.div>
           ))}
         </div>
 
         {/* Quick Actions */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <Link to="/dashboard/financeiro">
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="glass rounded-xl p-6 border-glow cursor-pointer group"
+              className="glass rounded-xl p-4 sm:p-6 border-glow cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/10">
-                    <Wallet className="w-6 h-6 text-primary" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 rounded-xl bg-primary/10">
+                    <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground">Financeiro</h3>
-                    <p className="text-muted-foreground text-sm">Controle seus gastos</p>
+                    <h3 className="font-bold text-foreground text-sm sm:text-base">Financeiro</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm">Controle seus gastos</p>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
             </motion.div>
           </Link>
@@ -185,19 +185,19 @@ const Dashboard = () => {
           <Link to="/dashboard/rotinas">
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="glass rounded-xl p-6 border-glow cursor-pointer group"
+              className="glass rounded-xl p-4 sm:p-6 border-glow cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/10">
-                    <CheckSquare className="w-6 h-6 text-primary" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 rounded-xl bg-primary/10">
+                    <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground">Rotinas</h3>
-                    <p className="text-muted-foreground text-sm">Organize seu dia</p>
+                    <h3 className="font-bold text-foreground text-sm sm:text-base">Rotinas</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm">Organize seu dia</p>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
             </motion.div>
           </Link>
@@ -205,19 +205,19 @@ const Dashboard = () => {
           <Link to="/dashboard/metas">
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="glass rounded-xl p-6 border-glow cursor-pointer group"
+              className="glass rounded-xl p-4 sm:p-6 border-glow cursor-pointer group sm:col-span-2 lg:col-span-1"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/10">
-                    <Target className="w-6 h-6 text-primary" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 rounded-xl bg-primary/10">
+                    <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground">Metas</h3>
-                    <p className="text-muted-foreground text-sm">Acompanhe seu progresso</p>
+                    <h3 className="font-bold text-foreground text-sm sm:text-base">Metas</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seu progresso</p>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
             </motion.div>
           </Link>

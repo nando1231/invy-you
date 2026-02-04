@@ -284,19 +284,19 @@ const Financeiro = () => {
         </Tabs>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-xl p-6 border-glow"
+            className="glass rounded-xl p-4 sm:p-6 border-glow"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <TrendingUp className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <span className="text-muted-foreground">Receitas</span>
+              <span className="text-muted-foreground text-sm sm:text-base">Receitas</span>
             </div>
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-xl sm:text-2xl font-bold text-primary">
               R$ {totalIncome.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </p>
           </motion.div>
@@ -305,15 +305,15 @@ const Financeiro = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="glass rounded-xl p-6 border-glow"
+            className="glass rounded-xl p-4 sm:p-6 border-glow"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-destructive/10">
-                <TrendingDown className="w-5 h-5 text-destructive" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-destructive/10">
+                <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
               </div>
-              <span className="text-muted-foreground">Despesas</span>
+              <span className="text-muted-foreground text-sm sm:text-base">Despesas</span>
             </div>
-            <p className="text-2xl font-bold text-destructive">
+            <p className="text-xl sm:text-2xl font-bold text-destructive">
               R$ {totalExpense.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </p>
           </motion.div>
@@ -322,15 +322,15 @@ const Financeiro = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass rounded-xl p-6 border-glow"
+            className="glass rounded-xl p-4 sm:p-6 border-glow"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-secondary">
-                <Calendar className="w-5 h-5 text-muted-foreground" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-secondary">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               </div>
-              <span className="text-muted-foreground">Saldo {periodLabel}</span>
+              <span className="text-muted-foreground text-sm sm:text-base">Saldo {periodLabel}</span>
             </div>
-            <p className={`text-2xl font-bold ${balance >= 0 ? "text-primary" : "text-destructive"}`}>
+            <p className={`text-xl sm:text-2xl font-bold ${balance >= 0 ? "text-primary" : "text-destructive"}`}>
               R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </p>
           </motion.div>
@@ -357,26 +357,26 @@ const Financeiro = () => {
                   key={transaction.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors"
+                  className="flex items-center justify-between p-3 sm:p-4 hover:bg-secondary/50 transition-colors gap-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${
                       transaction.type === "income" ? "bg-primary/10" : "bg-destructive/10"
                     }`}>
                       {transaction.type === "income" 
-                        ? <TrendingUp className="w-4 h-4 text-primary" />
-                        : <TrendingDown className="w-4 h-4 text-destructive" />
+                        ? <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+                        : <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
                       }
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{transaction.description}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground text-sm sm:text-base truncate">{transaction.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {format(parseISO(transaction.date), "dd/MM/yyyy")}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`font-bold ${
+                  <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                    <span className={`font-bold text-sm sm:text-base ${
                       transaction.type === "income" ? "text-primary" : "text-destructive"
                     }`}>
                       {transaction.type === "income" ? "+" : "-"}
@@ -386,7 +386,7 @@ const Financeiro = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(transaction.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive h-8 w-8"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

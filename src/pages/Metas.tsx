@@ -210,39 +210,39 @@ const Metas = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-xl p-6 border-glow"
+            className="glass rounded-xl p-4 sm:p-6 border-glow"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Target className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
             </div>
-            <p className="text-muted-foreground text-sm">Metas Ativas</p>
-            <p className="text-3xl font-bold text-foreground">{activeGoals}</p>
+            <p className="text-muted-foreground text-xs sm:text-sm">Metas Ativas</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">{activeGoals}</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="glass rounded-xl p-6 border-glow"
+            className="glass rounded-xl p-4 sm:p-6 border-glow"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Trophy className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
             </div>
-            <p className="text-muted-foreground text-sm">Metas Alcançadas</p>
-            <p className="text-3xl font-bold text-primary">{completedGoals}</p>
+            <p className="text-muted-foreground text-xs sm:text-sm">Metas Alcançadas</p>
+            <p className="text-2xl sm:text-3xl font-bold text-primary">{completedGoals}</p>
           </motion.div>
         </div>
 
         {/* Goals List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <AnimatePresence>
             {goals.map((goal) => {
               const progress = goal.target_value 
@@ -259,14 +259,14 @@ const Metas = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className={`glass rounded-xl p-6 border-glow ${
+                  className={`glass rounded-xl p-4 sm:p-6 border-glow ${
                     goal.is_completed ? "border-primary" : ""
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className={`font-bold text-foreground ${
+                  <div className="flex items-start justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className={`font-bold text-foreground text-sm sm:text-base ${
                           goal.is_completed ? "line-through opacity-70" : ""
                         }`}>
                           {goal.title}
@@ -278,22 +278,22 @@ const Metas = () => {
                         )}
                       </div>
                       {goal.description && (
-                        <p className="text-muted-foreground text-sm">{goal.description}</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">{goal.description}</p>
                       )}
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => deleteGoal(goal.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive h-8 w-8 flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
 
                   {goal.target_value && (
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-sm mb-2">
+                    <div className="mb-3 sm:mb-4">
+                      <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
                         <span className="text-muted-foreground">Progresso</span>
                         <span className="text-foreground font-medium">
                           {Number(goal.current_value).toLocaleString("pt-BR")} / {Number(goal.target_value).toLocaleString("pt-BR")}
@@ -303,11 +303,11 @@ const Metas = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                    <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground">
                       {goal.deadline && (
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                           <span>
                             {daysLeft !== null && daysLeft >= 0 
                               ? `${daysLeft} dias restantes`
@@ -324,6 +324,7 @@ const Metas = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="text-xs sm:text-sm w-full sm:w-auto"
                         onClick={() => {
                           setSelectedGoal(goal);
                           setUpdateValue(String(goal.current_value));
@@ -340,10 +341,10 @@ const Metas = () => {
           </AnimatePresence>
 
           {goals.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground glass rounded-xl border-glow">
-              <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma meta ainda</p>
-              <p className="text-sm">Defina sua primeira meta!</p>
+            <div className="text-center py-8 sm:py-12 text-muted-foreground glass rounded-xl border-glow">
+              <Target className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+              <p className="text-sm sm:text-base">Nenhuma meta ainda</p>
+              <p className="text-xs sm:text-sm">Defina sua primeira meta!</p>
             </div>
           )}
         </div>

@@ -357,7 +357,7 @@ const Rotinas = () => {
             </Dialog>
 
             {/* Tasks List */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <AnimatePresence>
                 {tasks.map((task) => (
                   <motion.div
@@ -365,7 +365,7 @@ const Rotinas = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className={`glass rounded-xl p-4 border-glow flex items-center gap-4 ${
+                    className={`glass rounded-xl p-3 sm:p-4 border-glow flex items-center gap-2 sm:gap-4 ${
                       task.is_completed ? "opacity-60" : ""
                     }`}
                   >
@@ -374,26 +374,26 @@ const Rotinas = () => {
                       className="flex-shrink-0"
                     >
                       {task.is_completed ? (
-                        <CheckCircle className="w-6 h-6 text-primary" />
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                       ) : (
-                        <Circle className="w-6 h-6 text-muted-foreground hover:text-primary transition-colors" />
+                        <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground hover:text-primary transition-colors" />
                       )}
                     </button>
 
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-foreground ${
+                      <p className={`font-medium text-foreground text-sm sm:text-base ${
                         task.is_completed ? "line-through" : ""
                       }`}>
                         {task.title}
                       </p>
                       {task.description && (
-                        <p className="text-sm text-muted-foreground truncate">
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
                           {task.description}
                         </p>
                       )}
                     </div>
 
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                    <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
                       task.priority === "high" ? "bg-destructive" :
                       task.priority === "medium" ? "bg-yellow-500" : "bg-primary"
                     }`} />
@@ -402,7 +402,7 @@ const Rotinas = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => deleteTask(task.id)}
-                      className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+                      className="flex-shrink-0 text-muted-foreground hover:text-destructive h-8 w-8"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -411,9 +411,9 @@ const Rotinas = () => {
               </AnimatePresence>
 
               {tasks.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Nenhuma tarefa ainda</p>
-                  <p className="text-sm">Adicione sua primeira tarefa!</p>
+                <div className="text-center py-8 sm:py-12 text-muted-foreground">
+                  <p className="text-sm sm:text-base">Nenhuma tarefa ainda</p>
+                  <p className="text-xs sm:text-sm">Adicione sua primeira tarefa!</p>
                 </div>
               )}
             </div>
@@ -451,7 +451,7 @@ const Rotinas = () => {
             </Dialog>
 
             {/* Habits List */}
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <AnimatePresence>
                 {habits.map((habit) => (
                   <motion.div
@@ -459,35 +459,35 @@ const Rotinas = () => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className={`glass rounded-xl p-4 border-glow ${
+                    className={`glass rounded-xl p-3 sm:p-4 border-glow ${
                       habit.completedToday ? "border-primary" : ""
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <button
                           onClick={() => toggleHabit(habit)}
-                          className={`p-2 rounded-lg transition-colors ${
+                          className={`p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 ${
                             habit.completedToday 
                               ? "bg-primary text-primary-foreground" 
                               : "bg-secondary text-muted-foreground hover:text-primary"
                           }`}
                         >
-                          <Star className="w-5 h-5" />
+                          <Star className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
-                        <span className="font-medium text-foreground">{habit.name}</span>
+                        <span className="font-medium text-foreground text-sm sm:text-base truncate">{habit.name}</span>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => deleteHabit(habit.id)}
-                        className="text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive h-8 w-8 flex-shrink-0"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Flame className={`w-4 h-4 ${habit.streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <Flame className={`w-3 h-3 sm:w-4 sm:h-4 ${habit.streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
                       <span className={habit.streak > 0 ? "text-orange-500 font-medium" : "text-muted-foreground"}>
                         {habit.streak} dias de sequência
                       </span>
@@ -497,9 +497,9 @@ const Rotinas = () => {
               </AnimatePresence>
 
               {habits.length === 0 && (
-                <div className="col-span-2 text-center py-12 text-muted-foreground">
-                  <p>Nenhum hábito ainda</p>
-                  <p className="text-sm">Comece a construir seus hábitos!</p>
+                <div className="col-span-1 sm:col-span-2 text-center py-8 sm:py-12 text-muted-foreground">
+                  <p className="text-sm sm:text-base">Nenhum hábito ainda</p>
+                  <p className="text-xs sm:text-sm">Comece a construir seus hábitos!</p>
                 </div>
               )}
             </div>

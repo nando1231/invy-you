@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -24,17 +25,18 @@ interface ExpenseChartsProps {
 }
 
 const COLORS = [
-  "hsl(160, 84%, 39%)",  // primary
-  "hsl(200, 84%, 50%)",  // blue
-  "hsl(280, 84%, 50%)",  // purple
-  "hsl(40, 84%, 50%)",   // yellow
-  "hsl(0, 84%, 60%)",    // red
-  "hsl(120, 60%, 45%)",  // green
-  "hsl(320, 84%, 50%)",  // pink
-  "hsl(180, 84%, 50%)",  // cyan
+  "hsl(172, 66%, 50%)",  // primary teal
+  "hsl(200, 70%, 50%)",  // blue
+  "hsl(280, 70%, 55%)",  // purple
+  "hsl(45, 80%, 50%)",   // yellow
+  "hsl(0, 70%, 55%)",    // red
+  "hsl(140, 60%, 45%)",  // green
+  "hsl(320, 70%, 55%)",  // pink
+  "hsl(190, 80%, 50%)",  // cyan
 ];
 
 const ExpenseCharts = ({ transactions, categories }: ExpenseChartsProps) => {
+  const isMobile = useIsMobile();
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter(t => t.type === "expense");
     const categoryMap = new Map<string, number>();
@@ -66,8 +68,8 @@ const ExpenseCharts = ({ transactions, categories }: ExpenseChartsProps) => {
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     return [
-      { name: "Receitas", value: income, fill: "hsl(160, 84%, 39%)" },
-      { name: "Despesas", value: expense, fill: "hsl(0, 84%, 60%)" },
+      { name: "Receitas", value: income, fill: "hsl(172, 66%, 50%)" },
+      { name: "Despesas", value: expense, fill: "hsl(0, 70%, 55%)" },
     ];
   }, [transactions]);
 
@@ -106,28 +108,28 @@ const ExpenseCharts = ({ transactions, categories }: ExpenseChartsProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       {/* Pie Chart - Gastos por Categoria */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-xl p-6 border-glow"
+        className="glass rounded-xl p-4 sm:p-6 border-glow"
       >
-        <h3 className="text-lg font-bold text-foreground mb-4">Gastos por Categoria</h3>
+        <h3 className="text-base sm:text-lg font-bold text-foreground mb-3 sm:mb-4">Gastos por Categoria</h3>
         {expensesByCategory.length > 0 ? (
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={expensesByCategory}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
+                  innerRadius={isMobile ? 35 : 50}
+                  outerRadius={isMobile ? 60 : 80}
                   paddingAngle={3}
                   dataKey="value"
                   nameKey="name"
-                  label={({ name, percent }) => 
+                  label={isMobile ? false : ({ name, percent }) => 
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                   labelLine={false}
@@ -140,11 +142,12 @@ const ExpenseCharts = ({ transactions, categories }: ExpenseChartsProps) => {
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
+                {isMobile && <Legend wrapperStyle={{ fontSize: '12px' }} />}
               </PieChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
+          <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground text-sm sm:text-base">
             Sem despesas neste período
           </div>
         )}
@@ -155,18 +158,18 @@ const ExpenseCharts = ({ transactions, categories }: ExpenseChartsProps) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="glass rounded-xl p-6 border-glow"
+        className="glass rounded-xl p-4 sm:p-6 border-glow"
       >
-        <h3 className="text-lg font-bold text-foreground mb-4">Receitas vs Despesas</h3>
-        <div className="h-64">
+        <h3 className="text-base sm:text-lg font-bold text-foreground mb-3 sm:mb-4">Receitas vs Despesas</h3>
+        <div className="h-48 sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={incomeVsExpense} layout="vertical">
               <XAxis type="number" hide />
               <YAxis 
                 type="category" 
                 dataKey="name" 
-                width={80}
-                tick={{ fill: 'hsl(220, 9%, 55%)', fontSize: 12 }}
+                width={isMobile ? 60 : 80}
+                tick={{ fill: 'hsl(220, 10%, 55%)', fontSize: isMobile ? 10 : 12 }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -174,7 +177,7 @@ const ExpenseCharts = ({ transactions, categories }: ExpenseChartsProps) => {
               <Bar 
                 dataKey="value" 
                 radius={[0, 8, 8, 0]}
-                barSize={40}
+                barSize={isMobile ? 30 : 40}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -187,28 +190,29 @@ const ExpenseCharts = ({ transactions, categories }: ExpenseChartsProps) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass rounded-xl p-6 border-glow lg:col-span-2"
+          className="glass rounded-xl p-4 sm:p-6 border-glow lg:col-span-2"
         >
-          <h3 className="text-lg font-bold text-foreground mb-4">Gastos por Dia</h3>
-          <div className="h-64">
+          <h3 className="text-base sm:text-lg font-bold text-foreground mb-3 sm:mb-4">Gastos por Dia</h3>
+          <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyExpenses}>
                 <XAxis 
                   dataKey="day" 
-                  tick={{ fill: 'hsl(220, 9%, 55%)', fontSize: 12 }}
+                  tick={{ fill: 'hsl(220, 10%, 55%)', fontSize: isMobile ? 10 : 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis 
-                  tick={{ fill: 'hsl(220, 9%, 55%)', fontSize: 12 }}
+                  tick={{ fill: 'hsl(220, 10%, 55%)', fontSize: isMobile ? 10 : 12 }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(value) => `R$${value}`}
+                  width={isMobile ? 50 : 60}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar 
                   dataKey="total" 
-                  fill="hsl(160, 84%, 39%)" 
+                  fill="hsl(172, 66%, 50%)" 
                   radius={[8, 8, 0, 0]}
                   name="Total"
                 />
