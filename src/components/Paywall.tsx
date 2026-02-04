@@ -3,6 +3,7 @@ import { Crown, Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface PaywallProps {
   children: React.ReactNode;
@@ -18,9 +19,10 @@ export const Paywall = ({ children }: PaywallProps) => {
     setSelectedPlan(plan);
     try {
       await createCheckout(plan);
+      // If we get here without redirect, it means something failed
     } catch (error) {
       console.error("Checkout error:", error);
-    } finally {
+      toast.error("Erro ao iniciar checkout. Tente novamente.");
       setCheckoutLoading(false);
     }
   };
