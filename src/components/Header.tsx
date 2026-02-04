@@ -21,7 +21,7 @@ export const Header = () => {
               <span className="text-primary-foreground font-black text-lg sm:text-xl">C</span>
             </div>
             <span className="text-foreground font-bold text-lg sm:text-xl tracking-tight">
-              CAVILHA<span className="text-primary">.ROTINAS</span>
+              CAVILHA<span className="text-primary">.IA</span>
             </span>
           </div>
 

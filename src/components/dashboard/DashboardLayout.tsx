@@ -62,7 +62,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <span className="text-primary-foreground font-black">C</span>
               </div>
               <span className="text-foreground font-bold tracking-tight">
-                CAVILHA<span className="text-primary">.ROTINAS</span>
+                CAVILHA<span className="text-primary">.IA</span>
               </span>
             </Link>
           </div>

@@ -16,7 +16,7 @@ export const Footer = () => {
               <span className="text-primary-foreground font-black text-lg">C</span>
             </div>
             <span className="text-foreground font-bold text-lg tracking-tight">
-              CAVILHA<span className="text-primary">.ROTINAS</span>
+              CAVILHA<span className="text-primary">.IA</span>
             </span>
           </div>
 
@@ -41,7 +41,7 @@ export const Footer = () => {
 
           {/* Copyright */}
           <p className="text-muted-foreground text-sm">
-            © 2024 Cavilha Rotinas. Todos os direitos reservados.
+            © 2024 Cavilha IA. Todos os direitos reservados.
           </p>
         </motion.div>
       </div>
