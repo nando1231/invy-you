@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Paywall } from "@/components/Paywall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,7 +140,6 @@ const Metas = () => {
   const activeGoals = goals.filter(g => !g.is_completed).length;
 
   return (
-    <Paywall>
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -373,10 +371,9 @@ const Metas = () => {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-    </DashboardLayout>
-    </Paywall>
-  );
+       </div>
+     </DashboardLayout>
+   );
 };
 
 export default Metas;
