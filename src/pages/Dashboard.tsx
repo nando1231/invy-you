@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Paywall } from "@/components/Paywall";
 import { 
   Wallet, 
   TrendingUp, 
@@ -128,8 +127,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <Paywall>
-      <DashboardLayout>
+    <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}
           <div>
@@ -275,7 +273,6 @@ const Dashboard = () => {
           )}
         </div>
       </DashboardLayout>
-    </Paywall>
   );
 };
 
