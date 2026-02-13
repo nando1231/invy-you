@@ -57,7 +57,7 @@ export const Features = () => {
             O ARSENAL COMPLETO
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-            Cavilha comanda. Você executa. Resultados aparecem.
+            Invyou comanda. Você executa. Resultados aparecem.
           </p>
         </motion.div>
 

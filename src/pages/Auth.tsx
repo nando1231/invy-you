@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { z } from "zod";
+import invyouIcon from "@/assets/invyou-icon.png";
 
 const emailSchema = z.string().email("Email inválido");
 const passwordSchema = z.string().min(6, "Senha deve ter no mínimo 6 caracteres");
@@ -117,11 +118,9 @@ const Auth = () => {
       >
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-black text-xl">C</span>
-          </div>
-          <span className="text-foreground font-bold text-xl tracking-tight">
-            CAVILHA<span className="text-primary">.ROTINAS</span>
+          <img src={invyouIcon} alt="Invyou" className="w-10 h-10" />
+          <span className="text-foreground font-bold text-xl tracking-tight lowercase">
+            inv<span className="text-gradient">you</span>
           </span>
         </div>
 

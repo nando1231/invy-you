@@ -4,6 +4,7 @@ import { Download, Smartphone, Share, Plus, MoreVertical, Check, ArrowLeft } fro
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import invyouIcon from "@/assets/invyou-icon.png";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -17,24 +18,20 @@ const Instalar = () => {
   const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
     }
 
-    // Detect device
     const userAgent = navigator.userAgent.toLowerCase();
     setIsIOS(/iphone|ipad|ipod/.test(userAgent));
     setIsAndroid(/android/.test(userAgent));
 
-    // Listen for install prompt
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
     };
@@ -42,14 +39,11 @@ const Instalar = () => {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-
     if (outcome === "accepted") {
       setIsInstalled(true);
     }
-
     setDeferredPrompt(null);
   };
 
@@ -65,10 +59,8 @@ const Instalar = () => {
               </Button>
             </Link>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">C</span>
-              </div>
-              <span className="font-bold text-lg">CAVILHA.IA</span>
+              <img src={invyouIcon} alt="Invyou" className="w-8 h-8" />
+              <span className="font-bold text-lg lowercase">inv<span className="text-gradient">you</span></span>
             </div>
           </div>
         </div>
@@ -82,10 +74,10 @@ const Instalar = () => {
         >
           {/* Hero */}
           <div className="text-center space-y-4">
-            <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20">
+            <div className="w-24 h-24 mx-auto rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Smartphone className="w-12 h-12 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Instalar Cavilha IA</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Instalar Invyou</h1>
             <p className="text-muted-foreground">
               Tenha acesso rápido ao seu assistente de finanças e rotinas direto na tela inicial
             </p>
@@ -100,7 +92,7 @@ const Instalar = () => {
                 </div>
                 <h2 className="text-lg font-semibold">App já instalado!</h2>
                 <p className="text-sm text-muted-foreground">
-                  O Cavilha IA está na sua tela inicial. Basta tocar no ícone para abrir.
+                  O Invyou está na sua tela inicial. Basta tocar no ícone para abrir.
                 </p>
                 <Link to="/dashboard">
                   <Button className="w-full mt-2">Ir para o Dashboard</Button>
@@ -121,7 +113,6 @@ const Instalar = () => {
             </Card>
           ) : (
             <>
-              {/* iOS Instructions */}
               {isIOS && (
                 <Card>
                   <CardContent className="p-6 space-y-4">
@@ -134,29 +125,21 @@ const Instalar = () => {
                         <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center shrink-0">1</span>
                         <div>
                           <p className="font-medium">Toque no ícone de Compartilhar</p>
-                          <p className="text-sm text-muted-foreground">
-                            Na barra inferior do Safari, toque em{" "}
-                            <Share className="w-4 h-4 inline" />
-                          </p>
+                          <p className="text-sm text-muted-foreground">Na barra inferior do Safari, toque em <Share className="w-4 h-4 inline" /></p>
                         </div>
                       </li>
                       <li className="flex gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center shrink-0">2</span>
                         <div>
                           <p className="font-medium">Selecione "Adicionar à Tela de Início"</p>
-                          <p className="text-sm text-muted-foreground">
-                            Role para baixo e toque na opção{" "}
-                            <Plus className="w-4 h-4 inline" />
-                          </p>
+                          <p className="text-sm text-muted-foreground">Role para baixo e toque na opção <Plus className="w-4 h-4 inline" /></p>
                         </div>
                       </li>
                       <li className="flex gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center shrink-0">3</span>
                         <div>
                           <p className="font-medium">Toque em "Adicionar"</p>
-                          <p className="text-sm text-muted-foreground">
-                            Confirme e o app aparecerá na sua tela inicial
-                          </p>
+                          <p className="text-sm text-muted-foreground">Confirme e o app aparecerá na sua tela inicial</p>
                         </div>
                       </li>
                     </ol>
@@ -164,7 +147,6 @@ const Instalar = () => {
                 </Card>
               )}
 
-              {/* Android Instructions */}
               {isAndroid && (
                 <Card>
                   <CardContent className="p-6 space-y-4">
@@ -177,28 +159,21 @@ const Instalar = () => {
                         <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center shrink-0">1</span>
                         <div>
                           <p className="font-medium">Toque no menu do navegador</p>
-                          <p className="text-sm text-muted-foreground">
-                            Toque nos três pontos{" "}
-                            <MoreVertical className="w-4 h-4 inline" /> no canto superior
-                          </p>
+                          <p className="text-sm text-muted-foreground">Toque nos três pontos <MoreVertical className="w-4 h-4 inline" /> no canto superior</p>
                         </div>
                       </li>
                       <li className="flex gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center shrink-0">2</span>
                         <div>
                           <p className="font-medium">Selecione "Instalar app" ou "Adicionar à tela inicial"</p>
-                          <p className="text-sm text-muted-foreground">
-                            A opção pode variar dependendo do navegador
-                          </p>
+                          <p className="text-sm text-muted-foreground">A opção pode variar dependendo do navegador</p>
                         </div>
                       </li>
                       <li className="flex gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center shrink-0">3</span>
                         <div>
                           <p className="font-medium">Confirme a instalação</p>
-                          <p className="text-sm text-muted-foreground">
-                            O app será adicionado à sua tela inicial
-                          </p>
+                          <p className="text-sm text-muted-foreground">O app será adicionado à sua tela inicial</p>
                         </div>
                       </li>
                     </ol>
@@ -206,7 +181,6 @@ const Instalar = () => {
                 </Card>
               )}
 
-              {/* Desktop/Generic Instructions */}
               {!isIOS && !isAndroid && (
                 <Card>
                   <CardContent className="p-6 space-y-4">
@@ -214,12 +188,8 @@ const Instalar = () => {
                       <Download className="w-5 h-5 text-primary" />
                       Como instalar
                     </h2>
-                    <p className="text-muted-foreground">
-                      Acesse este site pelo celular para ver as instruções de instalação específicas para seu dispositivo.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      No computador, procure pelo ícone de instalação na barra de endereços do navegador.
-                    </p>
+                    <p className="text-muted-foreground">Acesse este site pelo celular para ver as instruções de instalação específicas para seu dispositivo.</p>
+                    <p className="text-sm text-muted-foreground">No computador, procure pelo ícone de instalação na barra de endereços do navegador.</p>
                   </CardContent>
                 </Card>
               )}

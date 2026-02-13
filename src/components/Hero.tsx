@@ -54,7 +54,7 @@ export const Hero = () => {
 
             {/* Subheadline */}
             <p className="text-muted-foreground text-base sm:text-lg lg:text-xl mb-8 max-w-xl mx-auto lg:mx-0">
-              Cavilha é seu sistema completo: controla gastos, organiza sua rotina e mostra exatamente seu progresso.
+              Invyou é seu sistema completo: controla gastos, organiza sua rotina e mostra exatamente seu progresso.
             </p>
 
             {/* Features */}
@@ -104,7 +104,7 @@ export const Hero = () => {
           >
             <div className="relative">
               {/* Glow Effect */}
-              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-75" />
+              <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full scale-75" />
               
               {/* Preview Cards */}
               <div className="relative grid grid-cols-2 gap-4">
@@ -123,7 +123,7 @@ export const Hero = () => {
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
                   className="glass rounded-2xl p-6 border-glow mt-8"
                 >
-                  <Calendar className="w-8 h-8 text-primary mb-4" />
+                  <Calendar className="w-8 h-8 text-accent mb-4" />
                   <h3 className="font-bold text-foreground mb-2">Rotina</h3>
                   <p className="text-muted-foreground text-sm">Organize seu dia a dia</p>
                 </motion.div>
@@ -136,7 +136,7 @@ export const Hero = () => {
                   <Smartphone className="w-8 h-8 text-primary mb-4" />
                   <h3 className="font-bold text-foreground mb-2">Progresso</h3>
                   <div className="w-full bg-secondary rounded-full h-2 mb-2">
-                    <div className="bg-primary h-2 rounded-full w-3/4" />
+                    <div className="gradient-primary h-2 rounded-full w-3/4" />
                   </div>
                   <p className="text-muted-foreground text-sm">87% das metas alcançadas</p>
                 </motion.div>
