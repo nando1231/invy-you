@@ -16,15 +16,10 @@ import {
   Plus, 
   Trash2,
   Palette,
-  CreditCard,
-  Crown,
-  ExternalLink,
-  Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useSubscription } from "@/hooks/useSubscription";
 
 interface Category {
   id: string;
@@ -37,21 +32,9 @@ interface Category {
 const Configuracoes = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { 
-    subscribed, 
-    isTrial, 
-    subscriptionEnd, 
-    loading: subLoading,
-    createCheckout,
-    openCustomerPortal,
-    checkSubscription
-  } = useSubscription();
-  
   const [categories, setCategories] = useState<Category[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
 
   // Category form
   const [categoryName, setCategoryName] = useState("");
@@ -121,36 +104,6 @@ const Configuracoes = () => {
     }
   };
 
-  const handleCheckout = async () => {
-    setCheckoutLoading(true);
-    try {
-      await createCheckout();
-    } catch (error) {
-      toast({ title: "Erro ao iniciar checkout", variant: "destructive" });
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
-
-  const handleOpenPortal = async () => {
-    setPortalLoading(true);
-    try {
-      await openCustomerPortal();
-    } catch (error) {
-      toast({ title: "Erro ao abrir portal", variant: "destructive" });
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric"
-    });
-  };
 
   return (
     <DashboardLayout>
@@ -160,89 +113,6 @@ const Configuracoes = () => {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Configurações</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Personalize sua experiência</p>
         </div>
-
-        {/* Subscription Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-xl p-4 sm:p-6 border-glow"
-        >
-          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-              <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            </div>
-            <h2 className="font-bold text-foreground text-sm sm:text-base">Assinatura</h2>
-          </div>
-
-          {subLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : subscribed ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <CreditCard className="w-8 h-8 text-primary" />
-                <div>
-                  <p className="font-semibold text-foreground">
-                    Cavilha IA Pro {isTrial && <span className="text-primary">(Trial)</span>}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {isTrial ? "Período de teste até" : "Próxima cobrança em"} {formatDate(subscriptionEnd)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleOpenPortal}
-                  disabled={portalLoading}
-                  className="flex-1"
-                >
-                  {portalLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : (
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                  )}
-                  Gerenciar Assinatura
-                </Button>
-                <Button variant="ghost" onClick={checkSubscription} size="sm">
-                  Atualizar Status
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="p-4 bg-secondary/50 rounded-lg">
-                <p className="text-muted-foreground mb-2">
-                  Você ainda não tem uma assinatura ativa.
-                </p>
-                <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                  <li>✓ 3 dias grátis para testar</li>
-                  <li>✓ Acesso completo a todas as funcionalidades</li>
-                  <li>✓ Cancele quando quiser</li>
-                </ul>
-                <p className="font-bold text-foreground text-lg">
-                  R$ 29,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
-                </p>
-              </div>
-
-              <Button 
-                variant="hero" 
-                onClick={handleCheckout}
-                disabled={checkoutLoading}
-                className="w-full"
-              >
-                {checkoutLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <Crown className="w-4 h-4 mr-2" />
-                )}
-                Começar 3 Dias Grátis
-              </Button>
-            </div>
-          )}
-        </motion.div>
 
         {/* Profile Section */}
         <motion.div
