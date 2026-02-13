@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Menu, X, Download } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import invyouIcon from "@/assets/invyou-icon.png";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,11 +19,9 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-black text-lg sm:text-xl">C</span>
-            </div>
-            <span className="text-foreground font-bold text-lg sm:text-xl tracking-tight">
-              CAVILHA<span className="text-primary">.IA</span>
+            <img src={invyouIcon} alt="Invyou" className="w-8 h-8 sm:w-10 sm:h-10" />
+            <span className="text-foreground font-bold text-lg sm:text-xl tracking-tight lowercase">
+              inv<span className="text-gradient">you</span>
             </span>
           </Link>
 

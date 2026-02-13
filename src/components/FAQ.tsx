@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     question: "Posso usar no celular?",
-    answer: "Sim! O Cavilha Rotinas funciona perfeitamente no navegador do celular. É responsivo e otimizado para todas as telas. Em breve teremos app nativo para iOS e Android."
+    answer: "Sim! O Invyou funciona perfeitamente no navegador do celular. É responsivo e otimizado para todas as telas. Em breve teremos app nativo para iOS e Android."
   },
   {
     question: "Como funciona o sistema de metas e sprints?",

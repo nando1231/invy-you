@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import invyouIcon from "@/assets/invyou-icon.png";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -59,11 +60,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {/* Logo */}
           <div className="p-4 border-b border-border">
             <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-black">C</span>
-              </div>
-              <span className="text-foreground font-bold tracking-tight">
-                CAVILHA<span className="text-primary">.IA</span>
+              <img src={invyouIcon} alt="Invyou" className="w-8 h-8" />
+              <span className="text-foreground font-bold tracking-tight lowercase">
+                inv<span className="text-gradient">you</span>
               </span>
             </Link>
           </div>
@@ -132,11 +131,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-black text-sm">C</span>
-              </div>
-            </div>
+            <img src={invyouIcon} alt="Invyou" className="w-8 h-8" />
             <div className="w-10" /> {/* Spacer */}
           </div>
         </header>

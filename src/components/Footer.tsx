@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import invyouIcon from "@/assets/invyou-icon.png";
 
 export const Footer = () => {
   return (
@@ -12,11 +13,9 @@ export const Footer = () => {
         >
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-black text-lg">C</span>
-            </div>
-            <span className="text-foreground font-bold text-lg tracking-tight">
-              CAVILHA<span className="text-primary">.IA</span>
+            <img src={invyouIcon} alt="Invyou" className="w-8 h-8" />
+            <span className="text-foreground font-bold text-lg tracking-tight lowercase">
+              inv<span className="text-gradient">you</span>
             </span>
           </div>
 
@@ -41,7 +40,7 @@ export const Footer = () => {
 
           {/* Copyright */}
           <p className="text-muted-foreground text-sm">
-            © 2024 Cavilha IA. Todos os direitos reservados.
+            © 2026 Invyou. Todos os direitos reservados.
           </p>
         </motion.div>
       </div>
