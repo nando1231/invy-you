@@ -6,9 +6,9 @@ import heroBg from "@/assets/hero-bg.jpg";
 
 export const Hero = () => {
   const features = [
-    "3 dias grátis",
-    "Sem cartão para testar",
-    "Cancele quando quiser"
+    "100% gratuito",
+    "Sem cartão necessário",
+    "Acesso completo"
   ];
 
   return (
@@ -42,7 +42,7 @@ export const Hero = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 mb-6"
             >
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-primary text-sm font-medium">3 DIAS GRÁTIS</span>
+              <span className="text-primary text-sm font-medium">100% GRATUITO</span>
             </motion.div>
 
             {/* Headline */}
@@ -82,7 +82,7 @@ export const Hero = () => {
             >
               <Link to="/auth">
                 <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                  COMEÇAR 3 DIAS GRÁTIS
+                  COMEÇAR AGORA — É GRÁTIS
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
