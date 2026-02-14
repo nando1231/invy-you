@@ -34,6 +34,8 @@ import { ptBR } from "date-fns/locale";
 import ExpenseCharts from "@/components/financeiro/ExpenseCharts";
 import ExpenseTemplates from "@/components/financeiro/ExpenseTemplates";
 import QuickTransactionInput from "@/components/financeiro/QuickTransactionInput";
+import RecurringTransactions from "@/components/financeiro/RecurringTransactions";
+import { useRecurringTransactions } from "@/hooks/useRecurringTransactions";
 
 interface Transaction {
   id: string;
@@ -59,6 +61,7 @@ const Financeiro = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewPeriod, setViewPeriod] = useState<"day" | "week" | "month">("month");
+  const { recurring, addRecurring, removeRecurring, generateMonthlyTransactions } = useRecurringTransactions();
 
   // Form state
   const [type, setType] = useState<"income" | "expense">("expense");
@@ -71,6 +74,11 @@ const Financeiro = () => {
     if (user) {
       fetchTransactions();
       fetchCategories();
+      // Auto-generate recurring transactions for the current month
+      generateMonthlyTransactions().then(() => {
+        // Refresh transactions after generating
+        fetchTransactions();
+      });
     }
   }, [user, viewPeriod]);
 
@@ -222,6 +230,13 @@ const Financeiro = () => {
 
         {/* Expense Templates */}
         <ExpenseTemplates onAddExpense={handleQuickExpense} />
+
+        {/* Recurring / Fixed Monthly */}
+        <RecurringTransactions
+          recurring={recurring}
+          onAdd={addRecurring}
+          onRemove={removeRecurring}
+        />
 
         {/* Period Tabs */}
         <Tabs value={viewPeriod} onValueChange={(v) => setViewPeriod(v as any)}>

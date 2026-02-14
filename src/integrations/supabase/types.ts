@@ -169,6 +169,84 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_transaction_logs: {
+        Row: {
+          created_at: string
+          generated_for_month: string
+          id: string
+          recurring_id: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_for_month: string
+          id?: string
+          recurring_id: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_for_month?: string
+          id?: string
+          recurring_id?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_transaction_logs_recurring_id_fkey"
+            columns: ["recurring_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_transaction_logs_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          day_of_month: number
+          description: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          day_of_month?: number
+          description: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          day_of_month?: number
+          description?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed_at: string | null
