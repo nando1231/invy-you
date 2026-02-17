@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 import invyouIcon from "@/assets/invyou-icon.png";
 
 const emailSchema = z.string().email("Email inválido");
@@ -15,6 +16,7 @@ const passwordSchema = z.string().min(6, "Senha deve ter no mínimo 6 caracteres
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -47,6 +49,35 @@ const Auth = () => {
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      setErrors({ email: emailResult.error.errors[0].message });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha",
+      });
+      setIsForgotPassword(false);
+    } catch (err: any) {
+      toast({
+        title: "Erro",
+        description: err.message || "Erro ao enviar email de recuperação",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,14 +158,53 @@ const Auth = () => {
         {/* Card */}
         <div className="glass rounded-2xl p-8 border-glow">
           <h1 className="text-2xl font-bold text-foreground mb-2 text-center">
-            {isLogin ? "Bem-vindo de volta" : "Crie sua conta"}
+            {isForgotPassword
+              ? "Recuperar senha"
+              : isLogin
+              ? "Bem-vindo de volta"
+              : "Crie sua conta"}
           </h1>
           <p className="text-muted-foreground text-center mb-6">
-            {isLogin
+            {isForgotPassword
+              ? "Digite seu email para receber o link de recuperação"
+              : isLogin
               ? "Entre para acessar seu dashboard"
               : "Comece a controlar sua vida hoje"}
           </p>
 
+          {isForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 bg-secondary border-border"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-destructive text-sm">{errors.email}</p>
+                )}
+              </div>
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isLoading}>
+                {isLoading ? "Enviando..." : "Enviar link de recuperação"}
+              </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => { setIsForgotPassword(false); setErrors({}); }}
+                  className="text-primary hover:underline font-medium text-sm"
+                >
+                  Voltar ao login
+                </button>
+              </div>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
@@ -172,7 +242,18 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Senha</Label>
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgotPassword(true); setErrors({}); }}
+                    className="text-primary hover:underline text-xs font-medium"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                )}
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -210,6 +291,7 @@ const Auth = () => {
                 : "Criar conta"}
             </Button>
           </form>
+          )}
 
           <div className="mt-6 text-center">
             <p className="text-muted-foreground text-sm">
@@ -217,6 +299,7 @@ const Auth = () => {
               <button
                 onClick={() => {
                   setIsLogin(!isLogin);
+                  setIsForgotPassword(false);
                   setErrors({});
                 }}
                 className="text-primary hover:underline font-medium"
