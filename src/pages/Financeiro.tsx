@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { FinanceiroSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,6 +219,7 @@ const Financeiro = () => {
 
   return (
     <DashboardLayout>
+      {loading ? <FinanceiroSkeleton /> : (
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
@@ -452,6 +454,7 @@ const Financeiro = () => {
           )}
         </div>
       </div>
+      )}
      </DashboardLayout>
   );
 };

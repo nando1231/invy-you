@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { RotinasSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -272,6 +273,7 @@ const Rotinas = () => {
 
   return (
     <DashboardLayout>
+      {loading ? <RotinasSkeleton /> : (
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
@@ -538,6 +540,7 @@ const Rotinas = () => {
           </TabsContent>
         </Tabs>
        </div>
+       )}
      </DashboardLayout>
   );
 };

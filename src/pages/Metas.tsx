@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { MetasSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,6 +142,7 @@ const Metas = () => {
 
   return (
     <DashboardLayout>
+      {loading ? <MetasSkeleton /> : (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -372,6 +374,7 @@ const Metas = () => {
           </DialogContent>
         </Dialog>
        </div>
+       )}
      </DashboardLayout>
    );
 };

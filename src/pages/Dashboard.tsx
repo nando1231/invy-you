@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { 
   Wallet, 
   TrendingUp, 
@@ -128,6 +129,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
+        {loading ? <DashboardSkeleton /> : (
         <div className="space-y-6">
           {/* Header */}
           <div>
@@ -272,6 +274,7 @@ const Dashboard = () => {
             </motion.div>
           )}
         </div>
+        )}
       </DashboardLayout>
   );
 };
