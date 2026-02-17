@@ -8,6 +8,10 @@ import invyouIcon from "@/assets/invyou-icon.png";
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const handleLinkClick = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -69,41 +73,47 @@ export const Header = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="md:hidden pb-4"
-          >
-            <nav className="flex flex-col gap-4">
-              <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-                Recursos
-              </a>
-              <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-                Planos
-              </a>
-              <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">
-                FAQ
-              </a>
-              <div className="flex flex-col gap-2 pt-2">
-                <Link to="/instalar">
-                  <Button variant="outline" size="sm" className="w-full gap-2">
-                    <Download className="w-4 h-4" />
-                    Instalar App
-                  </Button>
-                </Link>
-                <Link to="/auth">
-                  <Button variant="ghost" size="sm" className="w-full">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/auth">
-                  <Button variant="hero" size="sm" className="w-full">
-                    Começar Grátis
-                  </Button>
-                </Link>
-              </div>
-            </nav>
-          </motion.div>
+          <>
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1] md:hidden"
+              onClick={handleLinkClick}
+            />
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="md:hidden pb-6 pt-2"
+            >
+              <nav className="flex flex-col gap-4">
+                <a href="#features" onClick={handleLinkClick} className="text-muted-foreground hover:text-foreground transition-colors py-2">
+                  Recursos
+                </a>
+                <a href="#pricing" onClick={handleLinkClick} className="text-muted-foreground hover:text-foreground transition-colors py-2">
+                  Planos
+                </a>
+                <a href="#faq" onClick={handleLinkClick} className="text-muted-foreground hover:text-foreground transition-colors py-2">
+                  FAQ
+                </a>
+                <div className="flex flex-col gap-2 pt-2">
+                  <Link to="/instalar" onClick={handleLinkClick}>
+                    <Button variant="outline" size="sm" className="w-full gap-2">
+                      <Download className="w-4 h-4" />
+                      Instalar App
+                    </Button>
+                  </Link>
+                  <Link to="/auth" onClick={handleLinkClick}>
+                    <Button variant="ghost" size="sm" className="w-full">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/auth" onClick={handleLinkClick}>
+                    <Button variant="hero" size="sm" className="w-full">
+                      Começar Grátis
+                    </Button>
+                  </Link>
+                </div>
+              </nav>
+            </motion.div>
+          </>
         )}
       </div>
     </motion.header>

@@ -30,10 +30,10 @@ export const Footer = () => {
             <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/termos" className="text-muted-foreground hover:text-foreground transition-colors">
               Termos
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/privacidade" className="text-muted-foreground hover:text-foreground transition-colors">
               Privacidade
             </a>
           </nav>
