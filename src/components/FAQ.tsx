@@ -20,16 +20,12 @@ const faqs = [
     answer: "Você define metas com prazos específicos. Os sprints de 60 dias te ajudam a manter foco em ciclos curtos de evolução. O dashboard mostra seu progresso em tempo real e te cobra consistência."
   },
   {
-    question: "Posso testar antes de assinar?",
-    answer: "Claro! O plano Starter é totalmente gratuito. Você pode testar as funcionalidades básicas sem compromisso. Os planos pagos têm garantia de 7 dias - não gostou, devolvemos seu dinheiro."
+    question: "O app é realmente gratuito?",
+    answer: "Sim! O Invyou é 100% gratuito. Todas as funcionalidades estão liberadas sem nenhuma cobrança, sem cartão de crédito e sem limites de uso."
   },
   {
-    question: "Meus dados ficam seguros?",
-    answer: "Absolutamente. Usamos criptografia de ponta e servidores seguros. Seus dados financeiros e pessoais são tratados com máxima privacidade. Nunca compartilhamos ou vendemos suas informações."
-  },
-  {
-    question: "Como funciona o cancelamento?",
-    answer: "Você pode cancelar a qualquer momento, sem burocracia. Basta acessar as configurações da sua conta. Seu acesso continua até o fim do período pago."
+    question: "Preciso criar conta?",
+    answer: "Sim, basta criar uma conta gratuita com seu email para salvar seus dados com segurança. É rápido e sem burocracia."
   }
 ];
 
