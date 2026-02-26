@@ -13,6 +13,7 @@ import Rotinas from "./pages/Rotinas";
 import Metas from "./pages/Metas";
 import Configuracoes from "./pages/Configuracoes";
 import Instalar from "./pages/Instalar";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Configuracoes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/adm"
+        element={
+          <ProtectedRoute>
+            <Admin />
           </ProtectedRoute>
         }
       />
