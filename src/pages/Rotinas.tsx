@@ -5,7 +5,7 @@ import { RotinasSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,14 +19,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Plus, 
+import {
+  Plus,
   Trash2,
   CheckCircle,
   Circle,
   Flame,
-  Star
+  Star,
+  RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,15 +47,18 @@ import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, differenceInDays } from "date-fns";
 import TaskTemplates from "@/components/rotinas/TaskTemplates";
 import HabitTemplates from "@/components/rotinas/HabitTemplates";
+import { HabitHeatmap } from "@/components/rotinas/HabitHeatmap";
 
 interface Task {
   id: string;
   title: string;
   description: string | null;
   is_completed: boolean;
+  is_recurring: boolean;
   due_date: string | null;
   priority: "low" | "medium" | "high";
   created_at: string;
+  completed_at: string | null;
 }
 
 interface Habit {
@@ -50,6 +66,7 @@ interface Habit {
   name: string;
   icon: string;
   color: string;
+  target_frequency: "daily" | "weekly";
   streak: number;
   completedToday: boolean;
 }
@@ -69,9 +86,11 @@ const Rotinas = () => {
   const [taskDescription, setTaskDescription] = useState("");
   const [taskPriority, setTaskPriority] = useState<"low" | "medium" | "high">("medium");
   const [taskDueDate, setTaskDueDate] = useState("");
+  const [taskRecurring, setTaskRecurring] = useState(false);
 
   // Habit form
   const [habitName, setHabitName] = useState("");
+  const [habitFrequency, setHabitFrequency] = useState<"daily" | "weekly">("daily");
 
   useEffect(() => {
     if (user) {
@@ -90,7 +109,18 @@ const Rotinas = () => {
       .order("created_at", { ascending: false });
 
     if (data) {
-      setTasks(data as Task[]);
+      const today = format(new Date(), "yyyy-MM-dd");
+      // Recurring tasks reset daily: treat as incomplete if completed_at is before today
+      const processed = (data as Task[]).map((task) => {
+        if (task.is_recurring && task.is_completed && task.completed_at) {
+          const completedDate = task.completed_at.split("T")[0];
+          if (completedDate < today) {
+            return { ...task, is_completed: false };
+          }
+        }
+        return task;
+      });
+      setTasks(processed);
     }
     setLoading(false);
   };
@@ -109,19 +139,31 @@ const Rotinas = () => {
         .eq("user_id", user!.id);
 
       const habitsWithStreak = habitsData.map((habit) => {
-        const habitLogs = logsData?.filter(l => l.habit_id === habit.id) || [];
-        const completedToday = habitLogs.some(l => l.completed_at === today);
-        
+        const habitLogs = logsData?.filter((l) => l.habit_id === habit.id) || [];
+        const freq: "daily" | "weekly" = habit.target_frequency || "daily";
+
+        // completedToday: for daily = completed today; for weekly = completed in last 7 days
+        let completedToday = false;
+        if (freq === "daily") {
+          completedToday = habitLogs.some((l) => l.completed_at === today);
+        } else {
+          const sevenDaysAgo = format(
+            new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+            "yyyy-MM-dd"
+          );
+          completedToday = habitLogs.some((l) => l.completed_at >= sevenDaysAgo);
+        }
+
         let streak = 0;
         const sortedLogs = habitLogs
-          .map(l => l.completed_at)
+          .map((l) => l.completed_at)
           .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-        
+
         if (sortedLogs.length > 0) {
           let currentDate = new Date();
           for (const logDate of sortedLogs) {
             const diff = differenceInDays(currentDate, parseISO(logDate));
-            if (diff <= 1) {
+            if (diff <= (freq === "weekly" ? 7 : 1)) {
               streak++;
               currentDate = parseISO(logDate);
             } else {
@@ -130,11 +172,7 @@ const Rotinas = () => {
           }
         }
 
-        return {
-          ...habit,
-          streak,
-          completedToday,
-        };
+        return { ...habit, target_frequency: freq, streak, completedToday };
       });
 
       setHabits(habitsWithStreak as Habit[]);
@@ -143,20 +181,18 @@ const Rotinas = () => {
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!taskTitle) {
       toast({ title: "Digite o título da tarefa", variant: "destructive" });
       return;
     }
-
     const { error } = await supabase.from("tasks").insert({
       user_id: user!.id,
       title: taskTitle,
       description: taskDescription || null,
       priority: taskPriority,
       due_date: taskDueDate || null,
+      is_recurring: taskRecurring,
     });
-
     if (error) {
       toast({ title: "Erro ao adicionar tarefa", variant: "destructive" });
     } else {
@@ -173,7 +209,6 @@ const Rotinas = () => {
       title,
       priority,
     });
-
     if (!error) {
       toast({ title: "Tarefa adicionada!" });
       fetchTasks();
@@ -182,23 +217,22 @@ const Rotinas = () => {
 
   const handleAddHabit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!habitName) {
       toast({ title: "Digite o nome do hábito", variant: "destructive" });
       return;
     }
-
     const { error } = await supabase.from("habits").insert({
       user_id: user!.id,
       name: habitName,
+      target_frequency: habitFrequency,
     });
-
     if (error) {
       toast({ title: "Erro ao adicionar hábito", variant: "destructive" });
     } else {
       toast({ title: "Hábito adicionado!" });
       setHabitDialogOpen(false);
       setHabitName("");
+      setHabitFrequency("daily");
       fetchHabits();
     }
   };
@@ -208,7 +242,6 @@ const Rotinas = () => {
       user_id: user!.id,
       name,
     });
-
     if (!error) {
       toast({ title: "Hábito adicionado!" });
       fetchHabits();
@@ -218,20 +251,16 @@ const Rotinas = () => {
   const toggleTask = async (task: Task) => {
     const { error } = await supabase
       .from("tasks")
-      .update({ 
+      .update({
         is_completed: !task.is_completed,
-        completed_at: !task.is_completed ? new Date().toISOString() : null
+        completed_at: !task.is_completed ? new Date().toISOString() : null,
       })
       .eq("id", task.id);
-
-    if (!error) {
-      fetchTasks();
-    }
+    if (!error) fetchTasks();
   };
 
   const toggleHabit = async (habit: Habit) => {
     const today = format(new Date(), "yyyy-MM-dd");
-    
     if (habit.completedToday) {
       await supabase
         .from("habit_logs")
@@ -245,7 +274,6 @@ const Rotinas = () => {
         completed_at: today,
       });
     }
-    
     fetchHabits();
   };
 
@@ -266,282 +294,357 @@ const Rotinas = () => {
     setTaskDescription("");
     setTaskPriority("medium");
     setTaskDueDate("");
+    setTaskRecurring(false);
   };
 
-  const completedTasks = tasks.filter(t => t.is_completed).length;
+  const completedTasks = tasks.filter((t) => t.is_completed).length;
   const totalTasks = tasks.length;
 
   return (
     <DashboardLayout>
-      {loading ? <RotinasSkeleton /> : (
-      <div className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Rotinas</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Organize seu dia e construa hábitos</p>
-        </div>
-
-        {/* Progress */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-xl p-4 sm:p-6 border-glow"
-        >
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h2 className="font-bold text-foreground text-sm sm:text-base">Progresso de Hoje</h2>
-            <span className="text-primary font-bold text-sm sm:text-base">
-              {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
-            </span>
+      {loading ? (
+        <RotinasSkeleton />
+      ) : (
+        <div className="space-y-4 sm:space-y-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Rotinas</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">Organize seu dia e construa hábitos</p>
           </div>
-          <div className="w-full bg-secondary rounded-full h-2 sm:h-3">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
-              transition={{ duration: 0.5 }}
-              className="bg-primary h-2 sm:h-3 rounded-full"
-            />
-          </div>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-2">
-            {completedTasks} de {totalTasks} tarefas concluídas
-          </p>
-        </motion.div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-secondary w-full sm:w-auto">
-            <TabsTrigger value="tasks" className="flex-1 sm:flex-none">Tarefas</TabsTrigger>
-            <TabsTrigger value="habits" className="flex-1 sm:flex-none">Hábitos</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="tasks" className="space-y-4 mt-4">
-            {/* Task Templates */}
-            <TaskTemplates 
-              onAddTask={handleQuickAddTask}
-              existingTasks={tasks.map(t => t.title)}
-            />
-
-            {/* Add Task Button */}
-            <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="hero" className="w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Tarefa Personalizada
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-card border-border mx-4 sm:mx-auto max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Nova Tarefa</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddTask} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Título</Label>
-                    <Input
-                      placeholder="O que precisa fazer?"
-                      value={taskTitle}
-                      onChange={(e) => setTaskTitle(e.target.value)}
-                      className="bg-secondary"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Descrição (opcional)</Label>
-                    <Input
-                      placeholder="Detalhes..."
-                      value={taskDescription}
-                      onChange={(e) => setTaskDescription(e.target.value)}
-                      className="bg-secondary"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Prioridade</Label>
-                    <Select value={taskPriority} onValueChange={(v: any) => setTaskPriority(v)}>
-                      <SelectTrigger className="bg-secondary">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Baixa</SelectItem>
-                        <SelectItem value="medium">Média</SelectItem>
-                        <SelectItem value="high">Alta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Data limite (opcional)</Label>
-                    <Input
-                      type="date"
-                      value={taskDueDate}
-                      onChange={(e) => setTaskDueDate(e.target.value)}
-                      className="bg-secondary"
-                    />
-                  </div>
-
-                  <Button type="submit" variant="hero" className="w-full">
-                    Adicionar
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            {/* Tasks List */}
-            <div className="space-y-2">
-              <AnimatePresence>
-                {tasks.map((task) => (
-                  <motion.div
-                    key={task.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className={`glass rounded-xl p-3 border-glow flex items-center gap-3 ${
-                      task.is_completed ? "opacity-60" : ""
-                    }`}
-                  >
-                    <button
-                      onClick={() => toggleTask(task)}
-                      className="flex-shrink-0 touch-manipulation"
-                    >
-                      {task.is_completed ? (
-                        <CheckCircle className="w-6 h-6 text-primary" />
-                      ) : (
-                        <Circle className="w-6 h-6 text-muted-foreground hover:text-primary transition-colors" />
-                      )}
-                    </button>
-
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-foreground text-sm ${
-                        task.is_completed ? "line-through" : ""
-                      }`}>
-                        {task.title}
-                      </p>
-                      {task.description && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {task.description}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                      task.priority === "high" ? "bg-destructive" :
-                      task.priority === "medium" ? "bg-yellow-500" : "bg-primary"
-                    }`} />
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteTask(task.id)}
-                      className="flex-shrink-0 text-muted-foreground hover:text-destructive h-8 w-8"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {tasks.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-sm">Nenhuma tarefa ainda</p>
-                  <p className="text-xs">Clique nas sugestões acima ou crie uma personalizada!</p>
-                </div>
-              )}
+          {/* Progress */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass rounded-xl p-4 sm:p-6 border-glow"
+          >
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h2 className="font-bold text-foreground text-sm sm:text-base">Progresso de Hoje</h2>
+              <span className="text-primary font-bold text-sm sm:text-base">
+                {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
+              </span>
             </div>
-          </TabsContent>
+            <div className="w-full bg-secondary rounded-full h-2 sm:h-3">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
+                transition={{ duration: 0.5 }}
+                className="bg-primary h-2 sm:h-3 rounded-full"
+              />
+            </div>
+            <p className="text-muted-foreground text-xs sm:text-sm mt-2">
+              {completedTasks} de {totalTasks} tarefas concluídas
+            </p>
+          </motion.div>
 
-          <TabsContent value="habits" className="space-y-4 mt-4">
-            {/* Habit Templates */}
-            <HabitTemplates 
-              onAddHabit={handleQuickAddHabit}
-              existingHabits={habits.map(h => h.name)}
-            />
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-secondary w-full sm:w-auto">
+              <TabsTrigger value="tasks" className="flex-1 sm:flex-none">Tarefas</TabsTrigger>
+              <TabsTrigger value="habits" className="flex-1 sm:flex-none">Hábitos</TabsTrigger>
+            </TabsList>
 
-            {/* Add Habit Button */}
-            <Dialog open={habitDialogOpen} onOpenChange={setHabitDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="hero" className="w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Hábito Personalizado
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-card border-border mx-4 sm:mx-auto max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Novo Hábito</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddHabit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Nome do hábito</Label>
-                    <Input
-                      placeholder="Ex: Exercício, Leitura..."
-                      value={habitName}
-                      onChange={(e) => setHabitName(e.target.value)}
-                      className="bg-secondary"
-                    />
-                  </div>
+            <TabsContent value="tasks" className="space-y-4 mt-4">
+              <TaskTemplates onAddTask={handleQuickAddTask} existingTasks={tasks.map((t) => t.title)} />
 
-                  <Button type="submit" variant="hero" className="w-full">
-                    Adicionar
+              <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="hero" className="w-full sm:w-auto">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nova Tarefa Personalizada
                   </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            {/* Habits List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <AnimatePresence>
-                {habits.map((habit) => (
-                  <motion.div
-                    key={habit.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className={`glass rounded-xl p-3 border-glow ${
-                      habit.completedToday ? "border-primary" : ""
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <button
-                          onClick={() => toggleHabit(habit)}
-                          className={`p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation ${
-                            habit.completedToday 
-                              ? "bg-primary text-primary-foreground" 
-                              : "bg-secondary text-muted-foreground hover:text-primary"
-                          }`}
-                        >
-                          <Star className="w-5 h-5" />
-                        </button>
-                        <span className="font-medium text-foreground text-sm truncate">{habit.name}</span>
+                </DialogTrigger>
+                <DialogContent className="bg-card border-border mx-4 sm:mx-auto max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Nova Tarefa</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleAddTask} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Título</Label>
+                      <Input
+                        placeholder="O que precisa fazer?"
+                        value={taskTitle}
+                        onChange={(e) => setTaskTitle(e.target.value)}
+                        className="bg-secondary"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Descrição (opcional)</Label>
+                      <Input
+                        placeholder="Detalhes..."
+                        value={taskDescription}
+                        onChange={(e) => setTaskDescription(e.target.value)}
+                        className="bg-secondary"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Prioridade</Label>
+                      <Select value={taskPriority} onValueChange={(v: any) => setTaskPriority(v)}>
+                        <SelectTrigger className="bg-secondary"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Baixa</SelectItem>
+                          <SelectItem value="medium">Média</SelectItem>
+                          <SelectItem value="high">Alta</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Data limite (opcional)</Label>
+                      <Input
+                        type="date"
+                        value={taskDueDate}
+                        onChange={(e) => setTaskDueDate(e.target.value)}
+                        className="bg-secondary"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                      <div>
+                        <Label className="text-sm font-medium">Tarefa recorrente</Label>
+                        <p className="text-xs text-muted-foreground">Reseta automaticamente todo dia</p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteHabit(habit.id)}
-                        className="text-muted-foreground hover:text-destructive h-8 w-8 flex-shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <Switch checked={taskRecurring} onCheckedChange={setTaskRecurring} />
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Flame className={`w-4 h-4 ${habit.streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
-                      <span className={habit.streak > 0 ? "text-orange-500 font-medium" : "text-muted-foreground"}>
-                        {habit.streak} dias de sequência
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                    <Button type="submit" variant="hero" className="w-full">Adicionar</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
 
-              {habits.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground col-span-full">
-                  <p className="text-sm">Nenhum hábito ainda</p>
-                  <p className="text-xs">Clique nas sugestões acima ou crie um personalizado!</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-       </div>
-       )}
-     </DashboardLayout>
+              {/* Tasks List */}
+              <div className="space-y-2">
+                <AnimatePresence>
+                  {tasks.map((task) => (
+                    <motion.div
+                      key={task.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className={`glass rounded-xl p-3 border-glow flex items-center gap-3 ${
+                        task.is_completed ? "opacity-60" : ""
+                      }`}
+                    >
+                      <button
+                        onClick={() => toggleTask(task)}
+                        className="flex-shrink-0 touch-manipulation"
+                      >
+                        {task.is_completed ? (
+                          <CheckCircle className="w-6 h-6 text-primary" />
+                        ) : (
+                          <Circle className="w-6 h-6 text-muted-foreground hover:text-primary transition-colors" />
+                        )}
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className={`font-medium text-foreground text-sm ${task.is_completed ? "line-through" : ""}`}>
+                            {task.title}
+                          </p>
+                          {task.is_recurring && (
+                            <RefreshCw className="w-3 h-3 text-muted-foreground shrink-0" title="Recorrente" />
+                          )}
+                        </div>
+                        {task.description && (
+                          <p className="text-xs text-muted-foreground truncate">{task.description}</p>
+                        )}
+                      </div>
+
+                      <div
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          task.priority === "high"
+                            ? "bg-destructive"
+                            : task.priority === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-primary"
+                        }`}
+                      />
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="flex-shrink-0 text-muted-foreground hover:text-destructive h-8 w-8"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-card border-border">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remover tarefa?</AlertDialogTitle>
+                            <AlertDialogDescription>"{task.title}"</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteTask(task.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Remover
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                {tasks.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">Nenhuma tarefa ainda</p>
+                    <p className="text-xs">Clique nas sugestões acima ou crie uma personalizada!</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="habits" className="space-y-4 mt-4">
+              <HabitTemplates
+                onAddHabit={handleQuickAddHabit}
+                existingHabits={habits.map((h) => h.name)}
+              />
+
+              <Dialog open={habitDialogOpen} onOpenChange={setHabitDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="hero" className="w-full sm:w-auto">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Hábito Personalizado
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card border-border mx-4 sm:mx-auto max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Novo Hábito</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleAddHabit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Nome do hábito</Label>
+                      <Input
+                        placeholder="Ex: Exercício, Leitura..."
+                        value={habitName}
+                        onChange={(e) => setHabitName(e.target.value)}
+                        className="bg-secondary"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Frequência</Label>
+                      <Select value={habitFrequency} onValueChange={(v: any) => setHabitFrequency(v)}>
+                        <SelectTrigger className="bg-secondary"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Diário</SelectItem>
+                          <SelectItem value="weekly">Semanal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="submit" variant="hero" className="w-full">Adicionar</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              {/* Habits List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <AnimatePresence>
+                  {habits.map((habit) => (
+                    <motion.div
+                      key={habit.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className={`glass rounded-xl p-3 border-glow ${
+                        habit.completedToday ? "border-primary" : ""
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <button
+                            onClick={() => toggleHabit(habit)}
+                            className={`p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation ${
+                              habit.completedToday
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-muted-foreground hover:text-primary"
+                            }`}
+                          >
+                            <Star className="w-5 h-5" />
+                          </button>
+                          <div className="min-w-0">
+                            <span className="font-medium text-foreground text-sm block truncate">
+                              {habit.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {habit.target_frequency === "weekly" ? "Semanal" : "Diário"}
+                            </span>
+                          </div>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-destructive h-8 w-8 flex-shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-card border-border">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover hábito?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                "{habit.name}" e todo o histórico serão removidos.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteHabit(habit.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+
+                      {/* Streak badge */}
+                      <div className="flex items-center gap-1.5">
+                        <Flame
+                          className={`w-4 h-4 ${
+                            habit.streak > 0 ? "text-orange-500" : "text-muted-foreground"
+                          }`}
+                        />
+                        {habit.streak > 0 ? (
+                          <span className="text-orange-500 font-bold text-sm">
+                            {habit.streak}
+                            <span className="font-normal text-xs ml-0.5">
+                              {habit.target_frequency === "weekly" ? "sem." : "dias"}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">Sem sequência</span>
+                        )}
+                        {habit.completedToday && (
+                          <span className="ml-auto text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
+                            ✓ Feito
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Heatmap */}
+                      <div className="mt-2">
+                        <HabitHeatmap habitId={habit.id} />
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                {habits.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground col-span-full">
+                    <p className="text-sm">Nenhum hábito ainda</p>
+                    <p className="text-xs">Clique nas sugestões acima ou crie um personalizado!</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+    </DashboardLayout>
   );
 };
 

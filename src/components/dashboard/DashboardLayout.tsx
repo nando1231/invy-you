@@ -1,16 +1,21 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  LayoutDashboard, 
-  Wallet, 
-  CheckSquare, 
-  Target, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Wallet,
+  CheckSquare,
+  Target,
+  Settings,
   LogOut,
   Menu,
-  X
+  X,
+  Bot,
+  BarChart2,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { IvyChat } from "@/components/ivy/IvyChat";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import invyouIcon from "@/assets/invyou-icon.png";
@@ -24,14 +29,33 @@ const navItems = [
   { icon: Wallet, label: "Financeiro", path: "/dashboard/financeiro" },
   { icon: CheckSquare, label: "Rotinas", path: "/dashboard/rotinas" },
   { icon: Target, label: "Metas", path: "/dashboard/metas" },
+  { icon: BarChart2, label: "Relatório", path: "/dashboard/relatorio" },
+  { icon: Bot, label: "Ivy", path: "/dashboard/ivy" },
   { icon: Settings, label: "Configurações", path: "/dashboard/configuracoes" },
 ];
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("theme");
+      return saved ? saved === "dark" : true;
+    }
+    return true;
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -93,6 +117,18 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           {/* User & Logout */}
           <div className="p-4 border-t border-border">
+            <div className="flex items-center gap-3 mb-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDark(!isDark)}
+                className="text-muted-foreground hover:text-foreground h-8 w-8"
+                title={isDark ? "Modo claro" : "Modo escuro"}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+              <span className="text-xs text-muted-foreground">{isDark ? "Modo escuro" : "Modo claro"}</span>
+            </div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                 <span className="text-primary font-bold">
@@ -145,6 +181,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </motion.div>
       </main>
+
+      <IvyChat />
     </div>
   );
 };

@@ -14,6 +14,8 @@ import Metas from "./pages/Metas";
 import Configuracoes from "./pages/Configuracoes";
 import Instalar from "./pages/Instalar";
 import Admin from "./pages/Admin";
+import IvyHistorico from "./pages/IvyHistorico";
+import Relatorio from "./pages/Relatorio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +83,22 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Configuracoes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/ivy"
+        element={
+          <ProtectedRoute>
+            <IvyHistorico />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/relatorio"
+        element={
+          <ProtectedRoute>
+            <Relatorio />
           </ProtectedRoute>
         }
       />

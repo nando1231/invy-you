@@ -13,18 +13,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
-  Plus, 
+import {
+  Plus,
   Trash2,
   Target,
   Trophy,
-  Calendar
+  Calendar,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+interface Milestone {
+  text: string;
+  done: boolean;
+}
 
 interface Goal {
   id: string;
@@ -35,6 +53,7 @@ interface Goal {
   deadline: string | null;
   is_completed: boolean;
   created_at: string;
+  milestones: Milestone[];
 }
 
 const Metas = () => {
@@ -53,6 +72,9 @@ const Metas = () => {
   const [targetValue, setTargetValue] = useState("");
   const [deadline, setDeadline] = useState("");
 
+  // Milestone state
+  const [milestoneInputs, setMilestoneInputs] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (user) {
       fetchGoals();
@@ -68,7 +90,7 @@ const Metas = () => {
       .order("created_at", { ascending: false });
 
     if (data) {
-      setGoals(data as Goal[]);
+      setGoals((data as any[]).map((g) => ({ ...g, milestones: g.milestones || [] })) as Goal[]);
     }
     setLoading(false);
   };
@@ -135,6 +157,23 @@ const Metas = () => {
     setDescription("");
     setTargetValue("");
     setDeadline("");
+  };
+
+  const addMilestone = async (goal: Goal) => {
+    const text = milestoneInputs[goal.id]?.trim();
+    if (!text) return;
+    const updated = [...goal.milestones, { text, done: false }];
+    await supabase.from("goals").update({ milestones: updated } as any).eq("id", goal.id);
+    setMilestoneInputs((prev) => ({ ...prev, [goal.id]: "" }));
+    fetchGoals();
+  };
+
+  const toggleMilestone = async (goal: Goal, index: number) => {
+    const updated = goal.milestones.map((m, i) =>
+      i === index ? { ...m, done: !m.done } : m
+    );
+    await supabase.from("goals").update({ milestones: updated } as any).eq("id", goal.id);
+    fetchGoals();
   };
 
   const completedGoals = goals.filter(g => g.is_completed).length;
@@ -283,14 +322,32 @@ const Metas = () => {
                         <p className="text-muted-foreground text-xs sm:text-sm">{goal.description}</p>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteGoal(goal.id)}
-                      className="text-muted-foreground hover:text-destructive h-8 w-8 flex-shrink-0"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive h-8 w-8 flex-shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-card border-border">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remover meta?</AlertDialogTitle>
+                          <AlertDialogDescription>"{goal.title}" será removida permanentemente.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteGoal(goal.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Remover
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
 
                   {goal.target_value && (
@@ -302,6 +359,44 @@ const Metas = () => {
                         </span>
                       </div>
                       <Progress value={progress} className="h-2" />
+                    </div>
+                  )}
+
+                  {/* Milestones */}
+                  {!goal.is_completed && (
+                    <div className="mb-3 space-y-1.5">
+                      {goal.milestones.map((m, i) => (
+                        <button
+                          key={i}
+                          onClick={() => toggleMilestone(goal, i)}
+                          className="flex items-center gap-2 w-full text-left group"
+                        >
+                          {m.done ? (
+                            <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
+                          )}
+                          <span className={`text-xs ${m.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                            {m.text}
+                          </span>
+                        </button>
+                      ))}
+                      <div className="flex gap-2 mt-1">
+                        <input
+                          type="text"
+                          placeholder="Adicionar marco..."
+                          value={milestoneInputs[goal.id] || ""}
+                          onChange={(e) => setMilestoneInputs((prev) => ({ ...prev, [goal.id]: e.target.value }))}
+                          onKeyDown={(e) => e.key === "Enter" && addMilestone(goal)}
+                          className="flex-1 text-xs bg-secondary rounded px-2 py-1 text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <button
+                          onClick={() => addMilestone(goal)}
+                          className="text-xs px-2 py-1 bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   )}
 
