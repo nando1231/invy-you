@@ -110,7 +110,7 @@ verify_jwt = false
 
 [functions.ivy-weekly-summary]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 
 [functions.ivy-weekly-summary-all]
 enabled = true
@@ -118,8 +118,8 @@ verify_jwt = false
 
 [functions.ivy-budget-alert]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 
 [functions.ivy-coach-insights]
 enabled = true
-verify_jwt = true
+verify_jwt = false
