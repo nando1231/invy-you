@@ -8,7 +8,7 @@ const WHISPER_URL = Deno.env.get('WHISPER_URL') ?? 'http://host.docker.internal:
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 function sanitizeInput(input: string, maxLen = 800): string {
