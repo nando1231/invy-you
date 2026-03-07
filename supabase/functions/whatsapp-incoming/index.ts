@@ -1,11 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { callAI } from "../_shared/ai-provider.ts"
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://host.docker.internal:54321'
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-const OLLAMA_URL = Deno.env.get('OLLAMA_URL') ?? 'http://host.docker.internal:11434/api/generate'
-const OLLAMA_MODEL = Deno.env.get('OLLAMA_MODEL') ?? 'qwen3:8b'
-const OLLAMA_VISION_MODEL = Deno.env.get('OLLAMA_VISION_MODEL') ?? 'qwen2.5vl:7b'
 const WHISPER_URL = Deno.env.get('WHISPER_URL') ?? 'http://host.docker.internal:9000'
 const WAHA_URL = Deno.env.get('WAHA_URL') ?? 'http://host.docker.internal:3000'
 const WAHA_API_KEY = Deno.env.get('WAHA_API_KEY') ?? ''
@@ -56,19 +54,9 @@ async function analyzeImage(imageBytes: Uint8Array): Promise<string | null> {
     let binary = ''
     for (let i = 0; i < imageBytes.length; i++) binary += String.fromCharCode(imageBytes[i])
     const base64 = btoa(binary)
-    const res = await fetch(OLLAMA_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: OLLAMA_VISION_MODEL,
-        prompt: 'Analise esta imagem. Se for nota fiscal, recibo ou cupom: liste itens com valores e o total. Responda em português de forma concisa.',
-        images: [base64],
-        stream: false,
-      }),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return (data.response ?? '').trim() || null
+    const prompt = `Analise esta imagem em base64: ${base64}\n\nSe for nota fiscal, recibo ou cupom: liste itens com valores e o total. Responda em português de forma concisa.`
+    const result = await callAI(prompt)
+    return result.trim() || null
   } catch { return null }
 }
 
@@ -108,13 +96,8 @@ Regras:
 - Perguntas sobre gastos → query_expenses, menciona projeção se relevante
 - Notas fiscais → registra o total como add_expense`
 
-  const res = await fetch(OLLAMA_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: OLLAMA_MODEL, prompt, stream: false }),
-  })
-  const data = await res.json()
-  const jsonMatch = (data.response ?? '').match(/\{[\s\S]*\}/)
+  const rawResponse = await callAI(prompt)
+  const jsonMatch = rawResponse.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error('No JSON in response')
   return JSON.parse(jsonMatch[0]) as { action: string; data: Record<string, unknown>; response: string }
 }
