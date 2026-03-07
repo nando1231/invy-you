@@ -102,7 +102,7 @@ verify_jwt = false
 
 [functions.ivy-chat]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 
 [functions.ivy-weekly-summary]
 enabled = true

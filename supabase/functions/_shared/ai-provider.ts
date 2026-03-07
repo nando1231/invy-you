@@ -45,13 +45,16 @@ async function callOpenAI(prompt: string): Promise<string> {
 
 async function callGemini(prompt: string): Promise<string> {
   const apiKey = Deno.env.get('GEMINI_API_KEY') ?? ''
-  const model  = Deno.env.get('GEMINI_MODEL')   ?? 'gemini-1.5-flash'
+  const model  = Deno.env.get('GEMINI_MODEL')   ?? 'gemini-2.5-flash'
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      body:    JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
+      }),
     }
   )
   const data = await res.json()

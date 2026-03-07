@@ -37,13 +37,23 @@ serve(async (req) => {
     // Decode JWT
     const authHeader = req.headers.get('Authorization') ?? ''
     const jwt = authHeader.replace('Bearer ', '')
-    if (!jwt) return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+    console.log('[ivy-chat] auth header present:', !!jwt)
+    if (!jwt) return new Response(JSON.stringify({ error: 'No token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-    const [, payloadB64] = jwt.split('.')
+    const parts = jwt.split('.')
+    console.log('[ivy-chat] JWT parts:', parts.length)
+    const [, payloadB64] = parts
     const padding = '='.repeat((4 - (payloadB64.length % 4)) % 4)
-    const payload = JSON.parse(atob(payloadB64 + padding))
-    const userId: string = payload.sub
-    if (!userId) return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+    let payload: Record<string, unknown>
+    try {
+      payload = JSON.parse(atob(payloadB64 + padding))
+    } catch (e) {
+      console.error('[ivy-chat] JWT decode error:', e)
+      return new Response(JSON.stringify({ error: 'Invalid token format' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    console.log('[ivy-chat] JWT role:', payload.role, 'sub:', payload.sub)
+    const userId: string = payload.sub as string
+    if (!userId) return new Response(JSON.stringify({ error: 'No user ID in token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
