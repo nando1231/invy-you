@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import invyouIcon from "@/assets/invyou-icon.png";
+import { InvyFAB } from "@/components/invy/InvyFAB";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -145,6 +146,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </motion.div>
       </main>
+      <InvyFAB />
     </div>
   );
 };
