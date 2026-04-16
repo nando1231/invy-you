@@ -6,57 +6,7 @@
 
 @layer base {
   :root {
-    /* Light mode — Invyou brand on white */
-    --background: 270 30% 97%;
-    --foreground: 270 60% 10%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 270 60% 10%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 270 60% 10%;
-
-    --primary: 187 100% 36%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 270 25% 92%;
-    --secondary-foreground: 270 60% 15%;
-
-    --muted: 270 20% 90%;
-    --muted-foreground: 270 15% 45%;
-
-    --accent: 270 50% 92%;
-    --accent-foreground: 270 100% 20%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 270 20% 86%;
-    --input: 270 20% 86%;
-    --ring: 187 100% 36%;
-
-    --radius: 0.75rem;
-
-    --glow-primary: 0 0 40px hsl(187 100% 36% / 0.20);
-    --glow-primary-subtle: 0 0 20px hsl(187 100% 36% / 0.10);
-    --glow-accent: 0 0 30px hsl(272 100% 29% / 0.12);
-    --gradient-primary: linear-gradient(135deg, #4A0094, #00BCD4);
-    --gradient-brand: linear-gradient(135deg, #4A0094, #5E1C8A, #00BCD4, #00E0FF);
-    --gradient-dark: linear-gradient(180deg, #f3f0fa, #e8f4f8);
-    --gradient-card: linear-gradient(135deg, #ffffff, #f5f0ff);
-
-    --sidebar-background: 270 30% 95%;
-    --sidebar-foreground: 270 60% 10%;
-    --sidebar-primary: 187 100% 36%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 25% 88%;
-    --sidebar-accent-foreground: 270 60% 15%;
-    --sidebar-border: 270 20% 86%;
-    --sidebar-ring: 187 100% 36%;
-  }
-
-  .dark {
-    /* Dark mode — Invyou brand deep purple */
+    /* Invyou brand: #1E003C deep purple to #005F78 teal */
     --background: 270 100% 12%;
     --foreground: 0 0% 100%;
 
@@ -85,6 +35,9 @@
     --input: 270 40% 20%;
     --ring: 187 100% 42%;
 
+    --radius: 0.75rem;
+
+    /* Custom tokens - Invyou brand #4A0094 → #5E1C8A → #00BCD4 → #00E0FF */
     --glow-primary: 0 0 60px hsl(187 100% 42% / 0.35);
     --glow-primary-subtle: 0 0 30px hsl(187 100% 42% / 0.18);
     --glow-accent: 0 0 40px hsl(272 100% 29% / 0.25);
@@ -92,6 +45,45 @@
     --gradient-brand: linear-gradient(135deg, #4A0094, #5E1C8A, #00BCD4, #00E0FF);
     --gradient-dark: linear-gradient(180deg, #1E003C, #0D001E);
     --gradient-card: linear-gradient(135deg, #2A0050, #1E003C);
+
+    --sidebar-background: 270 100% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 187 100% 42%;
+    --sidebar-primary-foreground: 270 100% 12%;
+    --sidebar-accent: 270 50% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 270 40% 20%;
+    --sidebar-ring: 187 100% 42%;
+  }
+
+  .dark {
+    --background: 270 100% 12%;
+    --foreground: 0 0% 100%;
+
+    --card: 270 80% 14%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 270 80% 14%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 187 100% 42%;
+    --primary-foreground: 270 100% 12%;
+
+    --secondary: 270 50% 18%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 270 40% 22%;
+    --muted-foreground: 250 20% 60%;
+
+    --accent: 272 100% 29%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 40% 20%;
+    --input: 270 40% 20%;
+    --ring: 187 100% 42%;
 
     --sidebar-background: 270 100% 10%;
     --sidebar-foreground: 0 0% 100%;
@@ -156,13 +148,13 @@
   }
 
   .glass {
-    background: hsl(var(--card) / 0.85);
+    background: hsl(270 80% 14% / 0.85);
     backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border) / 0.6);
+    border: 1px solid hsl(270 40% 25% / 0.5);
   }
 
   .border-glow {
-    border: 1px solid hsl(var(--primary) / 0.25);
+    border: 1px solid hsl(187 100% 42% / 0.25);
   }
 }
 
