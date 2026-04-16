@@ -19,7 +19,7 @@ export const InvyFAB = () => {
         style={{ marginBottom: "env(safe-area-inset-bottom)" }}
       >
         <Sparkles className="w-6 h-6" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full border-2 border-background animate-pulse" />
       </motion.button>
       <InvyChat open={open} onOpenChange={setOpen} />
     </>
