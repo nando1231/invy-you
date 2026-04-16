@@ -1,71 +1,78 @@
 
+## Plano: Chat com IA "Invy" — Assistente Financeira e de Rotinas
 
-# Usuário Administrador (bypass do paywall)
+Vou criar a **Invy**, uma assistente IA que conversa com o usuário dentro do app para tirar dúvidas, dar dicas financeiras, ajudar a registrar gastos, sugerir melhorias em rotinas/metas e oferecer suporte geral.
 
-## O que será feito
+### Como vai funcionar
 
-Criar um sistema de roles (papéis) no banco de dados para que usuários marcados como "admin" possam acessar o app sem precisar pagar assinatura.
+A Invy aparece como um **botão flutuante** (ícone de chat) em todas as páginas do dashboard. Ao clicar, abre um painel lateral de chat com streaming de respostas em tempo real (token por token, como ChatGPT).
 
-## Etapas
+A IA terá **contexto real** do usuário: ela consulta os gastos, tarefas, hábitos e metas do próprio usuário no banco para dar respostas personalizadas (ex: "Você gastou R$ 320 em alimentação este mês, 15% acima do mês passado").
 
-### 1. Criar tabela de roles no banco de dados
-- Nova tabela `user_roles` com colunas `user_id` e `role`
-- Tipo enum `app_role` com valores: `admin`, `user`
-- Políticas de segurança (RLS) para proteger a tabela
-- Função auxiliar `has_role()` para verificar roles de forma segura
+### O que a Invy poderá fazer
 
-### 2. Atribuir role de admin à sua conta
-- Inserir registro na tabela `user_roles` para o email `cavilhaads@gmail.com` com role `admin`
+1. **Tirar dúvidas** sobre o app (como criar meta, como funciona recorrência, etc.)
+2. **Dar dicas financeiras** baseadas nos gastos reais do usuário
+3. **Registrar transações via conversa** ("gastei 50 reais no mercado hoje" → cria a transação)
+4. **Analisar padrões** de gastos e rotinas
+5. **Sugerir melhorias** em metas e hábitos
+6. **Suporte geral** com tom amigável e motivador
 
-### 3. Atualizar a verificação de assinatura
-- Modificar a Edge Function `check-subscription` para verificar se o usuário tem role `admin` antes de checar trial/Stripe
-- Se for admin, retornar `subscribed: true` automaticamente
+### Arquitetura técnica
 
-### 4. Resultado
-- Sua conta `cavilhaads@gmail.com` terá acesso total sem precisar pagar
-- Usuários normais continuam passando pelo fluxo de trial + assinatura
-
----
-
-### Detalhes Técnicos
-
-**Migração SQL:**
-```sql
-CREATE TYPE public.app_role AS ENUM ('admin', 'user');
-
-CREATE TABLE public.user_roles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role app_role NOT NULL,
-  UNIQUE (user_id, role)
-);
-
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
-
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = _user_id AND role = _role
-  )
-$$;
-
--- Política: apenas admins podem ver roles
-CREATE POLICY "Admins can view roles"
-  ON public.user_roles FOR SELECT
-  TO authenticated
-  USING (public.has_role(auth.uid(), 'admin') OR auth.uid() = user_id);
+```text
+[FAB Chat Button] → [ChatDrawer]
+       ↓
+[useChat hook] → streams via fetch SSE
+       ↓
+[Edge Function: invy-chat]
+       ↓
+   ┌───┴────┐
+   ↓        ↓
+[Lovable AI]  [Supabase user data]
+google/       (transactions,
+gemini-3-     tasks, habits,
+flash-preview goals do usuário)
+       ↓
+[Tool calls: create_transaction]
+       ↓
+[Streaming response → UI]
 ```
 
-**Inserção do admin:**
-```sql
-INSERT INTO public.user_roles (user_id, role)
-SELECT id, 'admin' FROM auth.users
-WHERE email = 'cavilhaads@gmail.com';
-```
+### Implementação
 
-**Edge Function `check-subscription`:** Adicionar verificação de admin logo no início, antes do check de trial/Stripe. Se `has_role(user_id, 'admin')` retornar true, responder com `subscribed: true` imediatamente.
+**1. Banco de dados (nova tabela)**
+- `chat_conversations` — armazena conversas (id, user_id, title, created_at)
+- `chat_messages` — armazena mensagens (id, conversation_id, role, content, created_at)
+- RLS: usuário só vê suas próprias conversas/mensagens
 
+**2. Edge Function `invy-chat`** (`supabase/functions/invy-chat/index.ts`)
+- Valida JWT do usuário
+- Busca contexto: últimas 30 transações, tarefas pendentes, metas ativas, hábitos
+- Monta system prompt com personalidade da Invy + contexto do usuário
+- Chama Lovable AI Gateway (`google/gemini-3-flash-preview`) com **streaming**
+- Suporta **tool calling**: `create_transaction` (para registrar gastos via chat)
+- Trata erros 429 (rate limit) e 402 (créditos)
+- Salva mensagens na tabela após resposta completa
+
+**3. Componentes novos**
+- `src/components/invy/InvyFAB.tsx` — botão flutuante (ícone Sparkles + gradient da marca)
+- `src/components/invy/InvyChat.tsx` — drawer/sheet com lista de mensagens + input
+- `src/components/invy/MessageBubble.tsx` — bolha com markdown via `react-markdown`
+- `src/hooks/useInvyChat.ts` — gerencia estado, streaming SSE token-a-token, histórico
+
+**4. Integração no DashboardLayout**
+- Adicionar `<InvyFAB />` ao final do `DashboardLayout.tsx` para aparecer em todas as páginas autenticadas
+
+### System prompt da Invy (resumo)
+> "Você é a Invy, assistente financeira e de produtividade do app Invyou. Tom amigável, motivador, em português brasileiro. Use o contexto real do usuário para dar conselhos personalizados. Quando o usuário mencionar um gasto novo, use a tool `create_transaction`. Seja concisa (máx 3 parágrafos)."
+
+### Pacotes a adicionar
+- `react-markdown` (renderização das respostas)
+
+### Arquivos
+- **Novos**: migration SQL, `supabase/functions/invy-chat/index.ts`, `src/components/invy/InvyFAB.tsx`, `src/components/invy/InvyChat.tsx`, `src/components/invy/MessageBubble.tsx`, `src/hooks/useInvyChat.ts`
+- **Editados**: `src/components/dashboard/DashboardLayout.tsx` (adicionar FAB), `package.json` (react-markdown)
+
+### Custo / chaves
+- Usa **Lovable AI** (`LOVABLE_API_KEY` já configurada) — sem necessidade de chave externa.
