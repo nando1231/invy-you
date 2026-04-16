@@ -37,7 +37,7 @@ export const InvyChat = ({ open, onOpenChange }: Props) => {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md p-0 flex flex-col h-full gap-0"
+        className="w-full sm:max-w-md p-0 flex flex-col h-full gap-0 pt-[env(safe-area-inset-top)]"
       >
         <SheetHeader className="p-4 border-b border-border shrink-0">
           <SheetTitle className="flex items-center gap-2">
