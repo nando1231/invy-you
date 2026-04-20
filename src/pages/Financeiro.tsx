@@ -37,6 +37,9 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
+  subDays,
+  subWeeks,
+  subMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ExpenseCharts from "@/components/financeiro/ExpenseCharts";
