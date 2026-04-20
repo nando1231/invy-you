@@ -401,6 +401,45 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_summaries: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          read_at: string | null
+          top_category: string | null
+          total_expense: number | null
+          total_income: number | null
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          top_category?: string | null
+          total_expense?: number | null
+          total_income?: number | null
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          top_category?: string | null
+          total_expense?: number | null
+          total_income?: number | null
+          user_id?: string
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
