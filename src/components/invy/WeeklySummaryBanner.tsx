@@ -40,19 +40,19 @@ export const WeeklySummaryBanner = () => {
   if (!summary) return null;
 
   return (
-    <div className="m-4 p-3 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 border border-primary/30 relative">
+    <div className="mx-3 mt-3 mb-1 p-3.5 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border border-primary/20 relative">
       <button
         onClick={dismiss}
-        className="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1"
+        className="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-background/50 transition-colors"
         aria-label="Fechar resumo"
       >
         <X className="w-3.5 h-3.5" />
       </button>
-      <div className="flex items-center gap-2 mb-2">
-        <Sparkles className="w-4 h-4 text-primary" />
-        <span className="text-xs font-semibold text-primary">Resumo da semana</span>
+      <div className="flex items-center gap-1.5 mb-2">
+        <Sparkles className="w-3.5 h-3.5 text-primary" />
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-primary">Resumo da semana</span>
       </div>
-      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 text-sm">
+      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-p:text-[14px] prose-p:leading-relaxed">
         <ReactMarkdown>{summary.content}</ReactMarkdown>
       </div>
     </div>
