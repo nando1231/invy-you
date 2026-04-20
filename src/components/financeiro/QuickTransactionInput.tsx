@@ -1,131 +1,121 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { TrendingDown, TrendingUp, Plus, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingDown, TrendingUp, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-interface QuickTransactionInputProps {
+interface Props {
   onSubmit: (type: "income" | "expense", amount: number, description: string) => void;
 }
 
-const QuickTransactionInput = ({ onSubmit }: QuickTransactionInputProps) => {
+const QuickTransactionInput = ({ onSubmit }: Props) => {
   const [type, setType] = useState<"income" | "expense">("expense");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+
+  const canSubmit = amount && description && parseFloat(amount) > 0;
 
   const handleSubmit = () => {
-    if (!amount || !description) return;
-    
+    if (!canSubmit) return;
     onSubmit(type, parseFloat(amount), description);
     setAmount("");
     setDescription("");
-    setIsExpanded(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && amount && description) {
-      handleSubmit();
-    }
+    if (e.key === "Enter" && canSubmit) handleSubmit();
   };
 
   return (
-    <motion.div 
-      className="glass rounded-xl border-glow overflow-hidden"
-      animate={{ height: isExpanded ? "auto" : "auto" }}
-    >
-      <div className="p-3 sm:p-4">
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          {/* Type Toggle */}
-          <div className="flex gap-1 p-1 bg-secondary rounded-lg shrink-0">
-            <button
-              onClick={() => setType("expense")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                type === "expense" 
-                  ? "bg-destructive/20 text-destructive" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <TrendingDown className="w-4 h-4" />
-              <span className="hidden sm:inline">Despesa</span>
-            </button>
-            <button
-              onClick={() => setType("income")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                type === "income" 
-                  ? "bg-primary/20 text-primary" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Receita</span>
-            </button>
-          </div>
-
-          {/* Amount Input */}
-          <div className="relative flex-1 min-w-0">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">R$</span>
-            <Input
-              type="number"
-              step="0.01"
-              placeholder="0,00"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                if (e.target.value) setIsExpanded(true);
-              }}
-              onKeyDown={handleKeyDown}
-              className="pl-10 bg-secondary font-bold"
-            />
-          </div>
-
-          {/* Description Input */}
-          <Input
-            placeholder="O que foi?"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsExpanded(true)}
-            className="bg-secondary flex-1 min-w-0"
-          />
-
-          {/* Submit Button */}
-          <Button
-            onClick={handleSubmit}
-            variant="hero"
-            size="icon"
-            disabled={!amount || !description}
-            className="shrink-0 h-10 w-10"
+    <div className="rounded-3xl bg-card/60 border border-border/40 p-3 sm:p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-foreground">Adicionar rápido</span>
+        <div className="flex gap-1 p-0.5 bg-secondary/60 rounded-full">
+          <button
+            onClick={() => setType("expense")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+              type === "expense"
+                ? "bg-destructive/20 text-destructive"
+                : "text-muted-foreground"
+            }`}
           >
-            <Check className="w-4 h-4" />
-          </Button>
+            <TrendingDown className="w-3.5 h-3.5" />
+            Saiu
+          </button>
+          <button
+            onClick={() => setType("income")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+              type === "income"
+                ? "bg-primary/20 text-primary"
+                : "text-muted-foreground"
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            Entrou
+          </button>
         </div>
-
-        {/* Quick amounts */}
-        {isExpanded && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border"
-          >
-            <span className="text-xs text-muted-foreground self-center mr-2">Valores rápidos:</span>
-            {[10, 20, 50, 100, 200, 500].map((val) => (
-              <button
-                key={val}
-                onClick={() => setAmount(val.toString())}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                  amount === val.toString()
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:bg-primary/20 hover:text-primary"
-                }`}
-              >
-                R$ {val}
-              </button>
-            ))}
-          </motion.div>
-        )}
       </div>
-    </motion.div>
+
+      <div className="flex gap-2">
+        <div className="relative w-[120px] shrink-0">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium">
+            R$
+          </span>
+          <Input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            placeholder="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="pl-9 bg-secondary/60 border-border/40 font-bold text-base h-11"
+          />
+        </div>
+        <Input
+          placeholder="O que foi?"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="bg-secondary/60 border-border/40 flex-1 min-w-0 h-11"
+        />
+        <AnimatePresence>
+          {canSubmit && (
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              onClick={handleSubmit}
+              className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 active:scale-95 transition-transform"
+              aria-label="Adicionar"
+            >
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {amount && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="flex flex-wrap gap-1.5 pt-1"
+        >
+          {[10, 20, 50, 100, 200, 500].map((val) => (
+            <button
+              key={val}
+              onClick={() => setAmount(val.toString())}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                amount === val.toString()
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary/60 text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {val}
+            </button>
+          ))}
+        </motion.div>
+      )}
+    </div>
   );
 };
 
