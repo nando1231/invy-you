@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface Transaction {
   type: "income" | "expense";
@@ -16,6 +17,8 @@ interface Category {
 interface Props {
   transactions: Transaction[];
   categories: Category[];
+  previousTransactions?: Transaction[];
+  comparisonLabel?: string;
 }
 
 const fmt = (n: number) =>
