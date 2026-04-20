@@ -110,6 +110,16 @@ Escreva como se tivesse mandando uma mensagem pro WhatsApp. Comente o saldo, des
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Auth: apenas o cron (com secret) pode invocar essa função.
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  const provided = req.headers.get("x-cron-secret");
+  if (!cronSecret || provided !== cronSecret) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     // Pega todos os perfis (usuários ativos)
     const profilesRes = await sb(`profiles?select=user_id,full_name`);
@@ -131,7 +141,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("weekly-summary error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "erro" }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
