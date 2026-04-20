@@ -7,7 +7,7 @@ export type Msg = { role: "user" | "assistant"; content: string };
 const WELCOME: Msg = {
   role: "assistant",
   content:
-    "E aí! Sou a **Invy** ✨ tua parceira de finanças. Posso anotar gastos no automático, mostrar pra onde tua grana tá indo, dar uns toques (às vezes sem filtro 👀) e ajudar com metas.\n\nManda ver — o que rolou hoje?",
+    "Oi! Eu sou a **Invy**.\n\nTô aqui pra te ajudar a colocar a grana nos eixos de verdade. Posso anotar teus gastos, te mostrar onde tá vazando dinheiro e te dar uns conselhos honestos (vou ser sincera contigo, viu?).\n\nMe conta, o que rolou hoje?",
 };
 
 export function useInvyChat() {
