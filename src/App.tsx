@@ -14,6 +14,7 @@ import Metas from "./pages/Metas";
 import Configuracoes from "./pages/Configuracoes";
 import Instalar from "./pages/Instalar";
 import Admin from "./pages/Admin";
+import AdminCron from "./pages/AdminCron";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -89,6 +90,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Admin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/adm/cron"
+        element={
+          <ProtectedRoute>
+            <AdminCron />
           </ProtectedRoute>
         }
       />

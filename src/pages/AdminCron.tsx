@@ -177,11 +177,11 @@ const AdminCron = () => {
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h3 className="font-bold text-foreground">{job.name}</h3>
                       {job.status === "active" ? (
-                        <Badge variant="outline" className="text-[10px] border-green-500 text-green-500">
+                        <Badge variant="outline" className="text-[10px] border-primary text-primary">
                           <CheckCircle2 className="w-3 h-3 mr-1" /> Ativo
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[10px] border-muted-foreground">
+                        <Badge variant="outline" className="text-[10px] border-muted-foreground text-muted-foreground">
                           <AlertCircle className="w-3 h-3 mr-1" /> Inativo
                         </Badge>
                       )}
