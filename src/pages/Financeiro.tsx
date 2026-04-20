@@ -37,6 +37,9 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
+  subDays,
+  subWeeks,
+  subMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ExpenseCharts from "@/components/financeiro/ExpenseCharts";
@@ -69,6 +72,7 @@ const Financeiro = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [previousTransactions, setPreviousTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -103,17 +107,49 @@ const Financeiro = () => {
     }
   };
 
+  const getPreviousDateRange = () => {
+    const today = new Date();
+    switch (viewPeriod) {
+      case "day": {
+        const y = subDays(today, 1);
+        return { start: startOfDay(y), end: endOfDay(y) };
+      }
+      case "week": {
+        const lw = subWeeks(today, 1);
+        return {
+          start: startOfWeek(lw, { locale: ptBR }),
+          end: endOfWeek(lw, { locale: ptBR }),
+        };
+      }
+      case "month": {
+        const lm = subMonths(today, 1);
+        return { start: startOfMonth(lm), end: endOfMonth(lm) };
+      }
+    }
+  };
+
   const fetchTransactions = async () => {
     const { start, end } = getDateRange();
-    const { data, error } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", user!.id)
-      .gte("date", format(start, "yyyy-MM-dd"))
-      .lte("date", format(end, "yyyy-MM-dd"))
-      .order("date", { ascending: false })
-      .order("created_at", { ascending: false });
-    if (!error && data) setTransactions(data as Transaction[]);
+    const prev = getPreviousDateRange();
+    const [curr, previous] = await Promise.all([
+      supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", user!.id)
+        .gte("date", format(start, "yyyy-MM-dd"))
+        .lte("date", format(end, "yyyy-MM-dd"))
+        .order("date", { ascending: false })
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("transactions")
+        .select("type,amount,category_id")
+        .eq("user_id", user!.id)
+        .gte("date", format(prev.start, "yyyy-MM-dd"))
+        .lte("date", format(prev.end, "yyyy-MM-dd")),
+    ]);
+    if (!curr.error && curr.data) setTransactions(curr.data as Transaction[]);
+    if (!previous.error && previous.data)
+      setPreviousTransactions(previous.data as Transaction[]);
     setLoading(false);
   };
 
@@ -256,7 +292,18 @@ const Financeiro = () => {
             <QuickTransactionInput onSubmit={handleQuickTransaction} />
 
             {/* Top categorias inline */}
-            <TopCategories transactions={transactions} categories={categories} />
+            <TopCategories
+              transactions={transactions}
+              categories={categories}
+              previousTransactions={previousTransactions}
+              comparisonLabel={
+                viewPeriod === "day"
+                  ? "vs ontem"
+                  : viewPeriod === "week"
+                  ? "vs semana passada"
+                  : "vs mês passado"
+              }
+            />
 
             {/* Lista de transações agrupada por dia */}
             <TransactionsList
