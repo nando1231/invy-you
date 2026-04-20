@@ -292,7 +292,18 @@ const Financeiro = () => {
             <QuickTransactionInput onSubmit={handleQuickTransaction} />
 
             {/* Top categorias inline */}
-            <TopCategories transactions={transactions} categories={categories} />
+            <TopCategories
+              transactions={transactions}
+              categories={categories}
+              previousTransactions={previousTransactions}
+              comparisonLabel={
+                viewPeriod === "day"
+                  ? "vs ontem"
+                  : viewPeriod === "week"
+                  ? "vs semana passada"
+                  : "vs mês passado"
+              }
+            />
 
             {/* Lista de transações agrupada por dia */}
             <TransactionsList
