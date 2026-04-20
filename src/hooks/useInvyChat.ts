@@ -4,14 +4,14 @@ import { toast } from "sonner";
 
 export type Msg = { role: "user" | "assistant"; content: string };
 
+const WELCOME: Msg = {
+  role: "assistant",
+  content:
+    "E aí! Sou a **Invy** ✨ tua parceira de finanças. Posso anotar gastos no automático, mostrar pra onde tua grana tá indo, dar uns toques (às vezes sem filtro 👀) e ajudar com metas.\n\nManda ver — o que rolou hoje?",
+};
+
 export function useInvyChat() {
-  const [messages, setMessages] = useState<Msg[]>([
-    {
-      role: "assistant",
-      content:
-        "Oi! Sou a **Invy** ✨ sua assistente financeira e de produtividade. Posso registrar gastos, tirar dúvidas sobre o app, analisar suas finanças e ajudar com metas e rotinas.\n\nO que você quer fazer hoje?",
-    },
-  ]);
+  const [messages, setMessages] = useState<Msg[]>([WELCOME]);
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
@@ -20,31 +20,126 @@ export function useInvyChat() {
       const trimmed = text.trim();
       if (!trimmed || isLoading) return;
       const userMsg: Msg = { role: "user", content: trimmed };
-      setMessages((prev) => [...prev, userMsg]);
+      setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "" }]);
       setIsLoading(true);
 
       try {
-        const apiMessages = [...messages, userMsg].filter((m) => m.role !== "assistant" || messages.indexOf(m) > 0);
-        const { data, error } = await supabase.functions.invoke("invy-chat", {
-          body: { messages: apiMessages, conversationId },
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) throw new Error("Sessão expirada");
+
+        // Send full history (excluding our local welcome message) + new user msg
+        const apiMessages = [...messages.slice(1), userMsg].map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
+
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invy-chat`;
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ messages: apiMessages, conversationId }),
         });
 
-        if (error) throw error;
-        if (data?.error) {
-          toast.error(data.error);
-          setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${data.error}` }]);
+        const convHeader = resp.headers.get("x-conversation-id");
+        if (convHeader && !conversationId) setConversationId(convHeader);
+
+        if (!resp.ok) {
+          let errMsg = "Erro ao falar com a Invy";
+          try {
+            const j = await resp.json();
+            if (j?.error) errMsg = j.error;
+          } catch { /* ignore */ }
+          if (resp.status === 429) errMsg = "Tô recebendo muitas mensagens. Tenta de novo em uns segundos 🙏";
+          if (resp.status === 402) errMsg = "Os créditos da IA acabaram. Adicione créditos no workspace 💳";
+          toast.error(errMsg);
+          setMessages((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = { role: "assistant", content: `⚠️ ${errMsg}` };
+            return next;
+          });
           return;
         }
 
-        if (data?.conversationId && !conversationId) setConversationId(data.conversationId);
-        setMessages((prev) => [...prev, { role: "assistant", content: data?.content ?? "..." }]);
+        if (!resp.body) throw new Error("Sem stream");
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        let assistantSoFar = "";
+        let done = false;
+
+        while (!done) {
+          const r = await reader.read();
+          if (r.done) break;
+          buf += decoder.decode(r.value, { stream: true });
+          let nl: number;
+          while ((nl = buf.indexOf("\n")) !== -1) {
+            let line = buf.slice(0, nl);
+            buf = buf.slice(nl + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line || line.startsWith(":")) continue;
+            if (!line.startsWith("data: ")) continue;
+            const j = line.slice(6).trim();
+            if (j === "[DONE]") { done = true; break; }
+            try {
+              const parsed = JSON.parse(j);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              if (delta) {
+                assistantSoFar += delta;
+                setMessages((prev) => {
+                  const next = [...prev];
+                  next[next.length - 1] = { role: "assistant", content: assistantSoFar };
+                  return next;
+                });
+              }
+            } catch {
+              buf = line + "\n" + buf;
+              break;
+            }
+          }
+        }
+
+        // Flush leftovers
+        if (buf.trim()) {
+          for (let raw of buf.split("\n")) {
+            if (!raw || raw.startsWith(":") || !raw.startsWith("data: ")) continue;
+            const j = raw.slice(6).trim();
+            if (j === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(j);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              if (delta) {
+                assistantSoFar += delta;
+                setMessages((prev) => {
+                  const next = [...prev];
+                  next[next.length - 1] = { role: "assistant", content: assistantSoFar };
+                  return next;
+                });
+              }
+            } catch { /* ignore */ }
+          }
+        }
+
+        if (!assistantSoFar) {
+          setMessages((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = { role: "assistant", content: "Hmm, fiquei sem palavras agora 😅 manda de novo?" };
+            return next;
+          });
+        }
       } catch (e: any) {
         console.error(e);
         toast.error("Erro ao conversar com a Invy");
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Desculpe, tive um problema agora. Tenta de novo? 🙏" },
-        ]);
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = { role: "assistant", content: "Deu ruim aqui agora 😬 tenta de novo em alguns segundos." };
+          return next;
+        });
       } finally {
         setIsLoading(false);
       }

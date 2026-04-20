@@ -27,56 +27,118 @@ async function getUser(token: string) {
   return await r.json();
 }
 
+function monthKey(d: string) {
+  return d.slice(0, 7); // YYYY-MM
+}
+
 async function buildContext(userId: string) {
-  const [txRes, taskRes, goalRes, habitRes] = await Promise.all([
-    sb(`transactions?user_id=eq.${userId}&order=date.desc&limit=30`),
-    sb(`tasks?user_id=eq.${userId}&is_completed=eq.false&order=created_at.desc&limit=15`),
-    sb(`goals?user_id=eq.${userId}&is_completed=eq.false&order=created_at.desc&limit=10`),
-    sb(`habits?user_id=eq.${userId}&order=created_at.desc&limit=10`),
+  const today = new Date();
+  const sixtyDaysAgo = new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [txRes, catRes, taskRes, goalRes, habitRes, recRes, profileRes] = await Promise.all([
+    sb(`transactions?user_id=eq.${userId}&date=gte.${sixtyDaysAgo}&order=date.desc&limit=200`),
+    sb(`categories?user_id=eq.${userId}&limit=50`),
+    sb(`tasks?user_id=eq.${userId}&is_completed=eq.false&order=created_at.desc&limit=20`),
+    sb(`goals?user_id=eq.${userId}&is_completed=eq.false&order=created_at.desc&limit=15`),
+    sb(`habits?user_id=eq.${userId}&order=created_at.desc&limit=15`),
+    sb(`recurring_transactions?user_id=eq.${userId}&is_active=eq.true&limit=20`),
+    sb(`profiles?user_id=eq.${userId}&select=full_name&limit=1`),
   ]);
+
   const transactions = txRes.ok ? await txRes.json() : [];
+  const categories = catRes.ok ? await catRes.json() : [];
   const tasks = taskRes.ok ? await taskRes.json() : [];
   const goals = goalRes.ok ? await goalRes.json() : [];
   const habits = habitRes.ok ? await habitRes.json() : [];
+  const recurring = recRes.ok ? await recRes.json() : [];
+  const profile = profileRes.ok ? await profileRes.json() : [];
+  const firstName = (profile[0]?.full_name?.split(" ")[0]) ?? null;
 
-  const totalIn = transactions
-    .filter((t: any) => t.type === "income")
-    .reduce((s: number, t: any) => s + Number(t.amount), 0);
-  const totalOut = transactions
-    .filter((t: any) => t.type === "expense")
-    .reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const catMap = new Map(categories.map((c: any) => [c.id, c.name]));
+  const thisMonth = today.toISOString().slice(0, 7);
+  const lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastMonth = lastMonthDate.toISOString().slice(0, 7);
+
+  // Aggregate
+  let inThis = 0, outThis = 0, inLast = 0, outLast = 0;
+  const catSpendThis: Record<string, number> = {};
+  const catSpendLast: Record<string, number> = {};
+
+  for (const t of transactions) {
+    const m = monthKey(t.date);
+    const v = Number(t.amount);
+    const catName = (t.category_id && catMap.get(t.category_id)) || "Sem categoria";
+    if (m === thisMonth) {
+      if (t.type === "income") inThis += v;
+      else { outThis += v; catSpendThis[catName] = (catSpendThis[catName] || 0) + v; }
+    } else if (m === lastMonth) {
+      if (t.type === "income") inLast += v;
+      else { outLast += v; catSpendLast[catName] = (catSpendLast[catName] || 0) + v; }
+    }
+  }
+
+  const topCatsThis = Object.entries(catSpendThis)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([k, v]) => `${k}: R$ ${v.toFixed(2)}`)
+    .join(", ");
+
+  const variation = outLast > 0 ? (((outThis - outLast) / outLast) * 100).toFixed(1) : "—";
+  const balanceThis = inThis - outThis;
+  const recurringTotal = recurring
+    .filter((r: any) => r.type === "expense")
+    .reduce((s: number, r: any) => s + Number(r.amount), 0);
 
   return `
-DADOS DO USUÁRIO (use para personalizar respostas):
-- Receitas (últimas 30 transações): R$ ${totalIn.toFixed(2)}
-- Despesas (últimas 30 transações): R$ ${totalOut.toFixed(2)}
-- Saldo: R$ ${(totalIn - totalOut).toFixed(2)}
-- Últimas transações: ${JSON.stringify(transactions.slice(0, 10).map((t: any) => ({ d: t.date, desc: t.description, v: t.amount, tipo: t.type })))}
+DADOS REAIS DO USUÁRIO (use sempre que fizer sentido — nunca invente):
+- Nome: ${firstName ?? "não informado"}
+- Mês atual (${thisMonth}): receitas R$ ${inThis.toFixed(2)} | despesas R$ ${outThis.toFixed(2)} | saldo R$ ${balanceThis.toFixed(2)}
+- Mês anterior (${lastMonth}): receitas R$ ${inLast.toFixed(2)} | despesas R$ ${outLast.toFixed(2)}
+- Variação de despesas vs mês passado: ${variation}%
+- Top categorias do mês: ${topCatsThis || "nenhuma"}
+- Despesas recorrentes ativas: ${recurring.length} (total mensal R$ ${recurringTotal.toFixed(2)})
 - Tarefas pendentes (${tasks.length}): ${JSON.stringify(tasks.slice(0, 5).map((t: any) => t.title))}
 - Metas ativas (${goals.length}): ${JSON.stringify(goals.slice(0, 5).map((g: any) => ({ t: g.title, alvo: g.target_value, atual: g.current_value })))}
 - Hábitos (${habits.length}): ${JSON.stringify(habits.slice(0, 5).map((h: any) => h.name))}
+- Últimas 8 transações: ${JSON.stringify(transactions.slice(0, 8).map((t: any) => ({ d: t.date, desc: t.description, v: t.amount, tipo: t.type, cat: catMap.get(t.category_id) || null })))}
 `.trim();
 }
 
-const SYSTEM_PROMPT = (ctx: string) => `Você é a Invy, assistente financeira e de produtividade do app Invyou.
+const SYSTEM_PROMPT = (ctx: string) => `Você é a **Invy** — assistente financeira pessoal do app Invyou. Pense em você como aquela amiga que entende de grana, fala na lata e ainda joga uma tirada quando precisa.
 
-PERSONALIDADE:
-- Tom amigável, motivador e próximo, em português brasileiro (informal mas respeitoso).
-- Concisa: máximo 3 parágrafos curtos. Use markdown (negrito, listas) para clareza.
-- Use emojis com moderação (✨💰🎯).
-- Sempre que possível, use os DADOS REAIS do usuário abaixo para personalizar.
+# PERSONALIDADE (siga à risca)
+- **Brasileira, direta e descontraída** — tipo atendimento de iFood: rápida, sem rodeio, ocasionalmente sarcástica (com carinho, nunca grossa).
+- Pode usar gírias leves do dia a dia ("rolê", "moral?", "fica tranquilo", "bora", "olha só", "saca só", "tá ligado", "ó"). Sem palavrão.
+- **Sarcasmo bem dosado** quando o usuário faz algo claramente fora da curva ("3 iFood essa semana, hein? 👀"). Sempre seguido de um conselho útil.
+- Trata o usuário pelo primeiro nome quando souber.
+- Motivadora quando ele acerta ("isso! tá voando 🚀"), mas honesta quando ele escorrega.
+- **Nunca robotizada**, nunca formal demais, nunca "Prezado(a) usuário".
 
-O QUE VOCÊ FAZ:
-1. Tira dúvidas sobre o app Invyou (financeiro, rotinas, metas, configurações).
-2. Dá dicas financeiras personalizadas com base nos gastos reais.
-3. Registra transações quando o usuário menciona um gasto/receita — use a tool create_transaction.
-4. Analisa padrões de gastos, sugere economias.
-5. Ajuda a criar e manter metas e hábitos.
+# FOCO PRINCIPAL: FINANÇAS
+Você é especialista em ajudar a pessoa a:
+1. Entender pra onde o dinheiro tá indo (categorias, padrões, vazamentos).
+2. Identificar gastos exagerados ou supérfluos comparando com meses anteriores.
+3. Sugerir cortes realistas e metas de economia.
+4. Registrar gastos/receitas via conversa natural (use a tool create_transaction).
+5. Dar dicas práticas: reserva de emergência, divisão 50-30-20, planejamento mensal, prioridades.
+6. Conectar finanças com metas/hábitos quando relevante.
 
-REGRAS:
-- Quando o usuário disser algo como "gastei 50 no mercado", "paguei 200 de luz", "recebi 1000 de salário", chame create_transaction com os dados extraídos. Confirme depois com uma frase curta.
-- Se faltar info essencial (valor), pergunte antes.
-- Nunca invente dados. Se não souber, diga.
+# COMO RESPONDER
+- **Curta e cirúrgica**: 1 a 3 parágrafos. Direto ao ponto.
+- Use **markdown** (negrito, listas) pra destacar números e ações.
+- Use **dados reais** do usuário sempre que fizer sentido — números falam mais que opinião.
+- Emojis com moderação e propósito (💸💰📊🎯🔥👀🚨), nunca enfileirados.
+- Quando der conselho, traga **número concreto** ("se cortar R$ 80/mês de delivery, em 12 meses são R$ 960").
+- Se não souber algo do usuário, pergunte rápido — não invente.
+
+# TOOLS
+- **create_transaction**: quando o usuário falar "gastei X", "paguei Y", "recebi Z" — extraia tipo, valor, descrição e chame. Confirme com 1 frase curta e bem-humorada depois ("Anotei aí. ${"`R$ 50 mercado`"} tá no seu nome 📝").
+- **create_task**: quando ele pedir pra lembrar/fazer algo.
+- **create_goal**: quando ele falar em juntar dinheiro pra algo específico.
+- **create_habit**: quando ele falar em criar uma rotina/hábito.
+- Se faltar info essencial (valor, título), pergunte antes de chamar.
 
 ${ctx}`;
 
@@ -89,12 +151,64 @@ const TOOLS = [
       parameters: {
         type: "object",
         properties: {
-          type: { type: "string", enum: ["income", "expense"], description: "income=receita, expense=despesa" },
+          type: { type: "string", enum: ["income", "expense"] },
           amount: { type: "number", description: "Valor em reais (positivo)" },
-          description: { type: "string", description: "Descrição curta (ex: 'Mercado', 'Salário')" },
-          date: { type: "string", description: "Data ISO YYYY-MM-DD. Se não informada, hoje." },
+          description: { type: "string", description: "Descrição curta (ex: 'iFood', 'Salário')" },
+          date: { type: "string", description: "YYYY-MM-DD. Padrão: hoje." },
         },
         required: ["type", "amount", "description"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_task",
+      description: "Cria uma tarefa pendente para o usuário.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          priority: { type: "string", enum: ["low", "medium", "high"] },
+          due_date: { type: "string", description: "YYYY-MM-DD opcional" },
+        },
+        required: ["title"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_goal",
+      description: "Cria uma meta (geralmente financeira ou pessoal).",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          target_value: { type: "number" },
+          deadline: { type: "string", description: "YYYY-MM-DD opcional" },
+        },
+        required: ["title"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_habit",
+      description: "Cria um hábito a ser monitorado.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          target_frequency: { type: "string", enum: ["daily", "weekly"] },
+        },
+        required: ["name"],
         additionalProperties: false,
       },
     },
@@ -102,19 +216,41 @@ const TOOLS = [
 ];
 
 async function executeTool(name: string, args: any, userId: string, userToken: string) {
-  if (name === "create_transaction") {
-    const payload = {
-      user_id: userId,
-      type: args.type,
-      amount: Math.abs(Number(args.amount)),
-      description: args.description,
-      date: args.date || new Date().toISOString().slice(0, 10),
-    };
-    const r = await sb("transactions", { method: "POST", body: JSON.stringify(payload) }, userToken);
-    if (!r.ok) return { ok: false, error: await r.text() };
-    return { ok: true, message: `Transação registrada: ${payload.type === "income" ? "+" : "-"}R$ ${payload.amount.toFixed(2)} (${payload.description})` };
+  try {
+    if (name === "create_transaction") {
+      const payload = {
+        user_id: userId,
+        type: args.type,
+        amount: Math.abs(Number(args.amount)),
+        description: args.description,
+        date: args.date || new Date().toISOString().slice(0, 10),
+      };
+      const r = await sb("transactions", { method: "POST", body: JSON.stringify(payload) }, userToken);
+      if (!r.ok) return { ok: false, error: await r.text() };
+      return { ok: true, message: `Transação ${payload.type === "income" ? "+" : "-"}R$ ${payload.amount.toFixed(2)} (${payload.description}) registrada.` };
+    }
+    if (name === "create_task") {
+      const payload = { user_id: userId, title: args.title, description: args.description ?? null, priority: args.priority ?? "medium", due_date: args.due_date ?? null };
+      const r = await sb("tasks", { method: "POST", body: JSON.stringify(payload) }, userToken);
+      if (!r.ok) return { ok: false, error: await r.text() };
+      return { ok: true, message: `Tarefa "${args.title}" criada.` };
+    }
+    if (name === "create_goal") {
+      const payload = { user_id: userId, title: args.title, description: args.description ?? null, target_value: args.target_value ?? null, deadline: args.deadline ?? null };
+      const r = await sb("goals", { method: "POST", body: JSON.stringify(payload) }, userToken);
+      if (!r.ok) return { ok: false, error: await r.text() };
+      return { ok: true, message: `Meta "${args.title}" criada.` };
+    }
+    if (name === "create_habit") {
+      const payload = { user_id: userId, name: args.name, target_frequency: args.target_frequency ?? "daily" };
+      const r = await sb("habits", { method: "POST", body: JSON.stringify(payload) }, userToken);
+      if (!r.ok) return { ok: false, error: await r.text() };
+      return { ok: true, message: `Hábito "${args.name}" criado.` };
+    }
+    return { ok: false, error: "Tool desconhecida" };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "erro" };
   }
-  return { ok: false, error: "Tool desconhecida" };
 }
 
 Deno.serve(async (req) => {
@@ -139,7 +275,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Ensure conversation
     let convId = conversationId as string | undefined;
     if (!convId) {
       const r = await sb("chat_conversations", {
@@ -151,7 +286,6 @@ Deno.serve(async (req) => {
       convId = created[0]?.id;
     }
 
-    // Persist last user message
     const lastUser = [...messages].reverse().find((m: any) => m.role === "user");
     if (lastUser && convId) {
       await sb("chat_messages", {
@@ -161,16 +295,15 @@ Deno.serve(async (req) => {
     }
 
     const ctx = await buildContext(user.id);
-
-    // Call Lovable AI with tool support (loop for tool execution)
     let workingMessages: any[] = [
       { role: "system", content: SYSTEM_PROMPT(ctx) },
       ...messages,
     ];
 
-    // First, non-streaming call to detect tool calls
-    let assistantContent = "";
-    for (let iteration = 0; iteration < 3; iteration++) {
+    // Loop tool calls (non-stream) until model produces final answer, then stream that final answer.
+    let finalStreamResp: Response | null = null;
+    for (let iteration = 0; iteration < 4; iteration++) {
+      const isLast = iteration === 3;
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -181,17 +314,18 @@ Deno.serve(async (req) => {
           model: "google/gemini-3-flash-preview",
           messages: workingMessages,
           tools: TOOLS,
+          stream: false,
         }),
       });
 
       if (aiResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Muitas requisições, tente em alguns segundos." }), {
+        return new Response(JSON.stringify({ error: "Tô recebendo muitas mensagens agora. Tenta de novo em uns segundos 🙏" }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos da IA esgotados. Adicione créditos no workspace." }), {
+        return new Response(JSON.stringify({ error: "Os créditos da IA acabaram. Adicione créditos no workspace pra eu voltar 💳" }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -199,7 +333,7 @@ Deno.serve(async (req) => {
       if (!aiResp.ok) {
         const t = await aiResp.text();
         console.error("AI error", aiResp.status, t);
-        return new Response(JSON.stringify({ error: "AI gateway error" }), {
+        return new Response(JSON.stringify({ error: "Erro ao falar com a IA" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -209,7 +343,7 @@ Deno.serve(async (req) => {
       const choice = data.choices?.[0]?.message;
       const toolCalls = choice?.tool_calls;
 
-      if (toolCalls && toolCalls.length > 0) {
+      if (toolCalls && toolCalls.length > 0 && !isLast) {
         workingMessages.push(choice);
         for (const tc of toolCalls) {
           const args = JSON.parse(tc.function.arguments || "{}");
@@ -220,29 +354,89 @@ Deno.serve(async (req) => {
             content: JSON.stringify(result),
           });
         }
-        continue; // loop again to get final answer
+        continue;
       }
 
-      assistantContent = choice?.content ?? "";
+      // We have a final assistant content (or hit iteration cap). Now stream a polished version.
+      // Strategy: stream the final answer directly from a fresh call without tools.
+      workingMessages.push({ role: "assistant", content: choice?.content ?? "" });
+      finalStreamResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            ...workingMessages.slice(0, -1),
+            { role: "system", content: "Reescreva sua última resposta seguindo a personalidade definida (direta, levemente sarcástica quando couber, com markdown e usando os números reais do usuário). Não repita esta instrução." },
+          ],
+          stream: true,
+        }),
+      });
       break;
     }
 
-    // Persist assistant message
-    if (convId && assistantContent) {
-      await sb("chat_messages", {
-        method: "POST",
-        body: JSON.stringify({ conversation_id: convId, user_id: user.id, role: "assistant", content: assistantContent }),
-      });
-      await sb(`chat_conversations?id=eq.${convId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ updated_at: new Date().toISOString() }),
+    if (!finalStreamResp || !finalStreamResp.ok || !finalStreamResp.body) {
+      return new Response(JSON.stringify({ error: "Sem resposta da IA" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(
-      JSON.stringify({ content: assistantContent, conversationId: convId }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    // Tee the stream: send to client + collect to persist
+    const [clientStream, captureStream] = finalStreamResp.body.tee();
+
+    // Background capture & persist
+    (async () => {
+      try {
+        const reader = captureStream.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        let full = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          let nl: number;
+          while ((nl = buf.indexOf("\n")) !== -1) {
+            let line = buf.slice(0, nl);
+            buf = buf.slice(nl + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line.startsWith("data: ")) continue;
+            const j = line.slice(6).trim();
+            if (j === "[DONE]") continue;
+            try {
+              const p = JSON.parse(j);
+              const c = p.choices?.[0]?.delta?.content;
+              if (c) full += c;
+            } catch { /* partial */ }
+          }
+        }
+        if (convId && full) {
+          await sb("chat_messages", {
+            method: "POST",
+            body: JSON.stringify({ conversation_id: convId, user_id: user.id, role: "assistant", content: full }),
+          });
+          await sb(`chat_conversations?id=eq.${convId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ updated_at: new Date().toISOString() }),
+          });
+        }
+      } catch (e) {
+        console.error("capture error", e);
+      }
+    })();
+
+    return new Response(clientStream, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "x-conversation-id": convId ?? "",
+      },
+    });
   } catch (e) {
     console.error("invy-chat error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
