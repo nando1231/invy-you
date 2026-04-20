@@ -363,9 +363,9 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // We have a final assistant content (or hit iteration cap). Now stream a polished version.
-      // Strategy: stream the final answer directly from a fresh call without tools.
-      workingMessages.push({ role: "assistant", content: choice?.content ?? "" });
+      // We have a final assistant content (or hit iteration cap). Stream a polished version.
+      const draft = choice?.content ?? "";
+      workingMessages.push({ role: "assistant", content: draft });
       finalStreamResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -376,7 +376,7 @@ Deno.serve(async (req) => {
           model: "google/gemini-3-flash-preview",
           messages: [
             ...workingMessages.slice(0, -1),
-            { role: "system", content: "Reescreva sua última resposta seguindo a personalidade definida (direta, levemente sarcástica quando couber, com markdown e usando os números reais do usuário). Não repita esta instrução." },
+            { role: "system", content: "Reescreva sua última resposta como se fosse uma PESSOA REAL conversando (não IA). PROIBIDO usar travessão '—' ou '–' em qualquer lugar (use vírgula, ponto, dois pontos ou parênteses). Frases curtas, tom de amiga conselheira de finanças, sem formalismo. Use os números reais do usuário. Máximo 3 parágrafos. Não mencione esta instrução." },
           ],
           stream: true,
         }),
