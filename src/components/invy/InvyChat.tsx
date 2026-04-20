@@ -12,10 +12,10 @@ interface Props {
 }
 
 const SUGGESTIONS = [
-  "Como estão meus gastos esse mês?",
-  "Gastei R$ 50 no mercado hoje",
-  "Me dê 3 dicas para economizar",
-  "Como criar uma meta?",
+  "Pra onde tá indo minha grana esse mês?",
+  "Gastei 45 no iFood agora",
+  "Me dá 3 cortes que eu posso fazer já",
+  "Crio uma meta de R$ 2000 pra viagem?",
 ];
 
 export const InvyChat = ({ open, onOpenChange }: Props) => {
@@ -54,10 +54,10 @@ export const InvyChat = ({ open, onOpenChange }: Props) => {
           {messages.map((m, i) => (
             <MessageBubble key={i} role={m.role} content={m.content} />
           ))}
-          {isLoading && (
+          {isLoading && messages[messages.length - 1]?.role === "user" && (
             <div className="flex items-center gap-2 text-muted-foreground text-sm pl-10">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Invy está pensando...
+              Invy tá pensando...
             </div>
           )}
         </div>
