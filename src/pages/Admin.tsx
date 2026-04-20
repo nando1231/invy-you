@@ -148,9 +148,14 @@ const Admin = () => {
               </h1>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/adm/cron")}>
+              <Activity className="w-4 h-4 mr-2" /> Cron
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
+            </Button>
+          </div>
         </div>
       </header>
 
