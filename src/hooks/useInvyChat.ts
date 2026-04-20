@@ -7,13 +7,40 @@ export type Msg = { role: "user" | "assistant"; content: string };
 const WELCOME: Msg = {
   role: "assistant",
   content:
-    "Oi! Eu sou a **Invy**.\n\nTô aqui pra te ajudar a colocar a grana nos eixos de verdade. Posso anotar teus gastos, te mostrar onde tá vazando dinheiro e te dar uns conselhos honestos (vou ser sincera contigo, viu?).\n\nMe conta, o que rolou hoje?",
+    "Oi! Sou a **Invy** ✨\n\nTua parceira de finanças. Posso anotar gasto na hora, te mostrar onde a grana tá indo e dar uns toques quando precisar.\n\nManda ver, o que rolou hoje?",
 };
 
 export function useInvyChat() {
   const [messages, setMessages] = useState<Msg[]>([WELCOME]);
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+
+  const newConversation = useCallback(() => {
+    setMessages([WELCOME]);
+    setConversationId(null);
+  }, []);
+
+  const loadConversation = useCallback(async (id: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("role,content")
+        .eq("conversation_id", id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      const loaded: Msg[] = (data || []).map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+      setMessages(loaded.length ? loaded : [WELCOME]);
+      setConversationId(id);
+    } catch (e) {
+      toast.error("Não consegui carregar essa conversa");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const send = useCallback(
     async (text: string) => {
@@ -147,5 +174,5 @@ export function useInvyChat() {
     [messages, isLoading, conversationId],
   );
 
-  return { messages, isLoading, send };
+  return { messages, isLoading, send, conversationId, newConversation, loadConversation };
 }
