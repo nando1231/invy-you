@@ -343,11 +343,33 @@ const Metas = () => {
           </AnimatePresence>
 
           {goals.length === 0 && (
-            <div className="text-center py-8 sm:py-12 text-muted-foreground glass rounded-xl border-glow">
-              <Target className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-50" />
-              <p className="text-sm sm:text-base">Nenhuma meta ainda</p>
-              <p className="text-xs sm:text-sm">Defina sua primeira meta!</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4"
+            >
+              <div className="relative mb-6 sm:mb-8">
+                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+                <div className="relative p-6 sm:p-8 rounded-full bg-primary/10 border border-primary/20">
+                  <Target className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+                Você ainda não tem metas
+              </h2>
+              <p className="text-muted-foreground text-sm sm:text-base mb-8 max-w-sm">
+                Defina objetivos claros para acompanhar seu progresso e alcançar seus sonhos.
+              </p>
+              <Button
+                variant="hero"
+                size="lg"
+                className="text-base px-8 py-6 h-auto shadow-glow hover:shadow-glow-strong transition-shadow"
+                onClick={() => setDialogOpen(true)}
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Criar minha primeira meta
+              </Button>
+            </motion.div>
           )}
         </div>
 
