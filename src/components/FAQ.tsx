@@ -31,7 +31,7 @@ const faqs = [
 
 export const FAQ = () => {
   return (
-    <section id="faq" className="py-20 sm:py-32 relative">
+    <section id="faq" className="py-12 sm:py-20 relative">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <motion.div
@@ -39,7 +39,7 @@ export const FAQ = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12 sm:mb-16"
+          className="text-center mb-8 sm:mb-12"
         >
           <span className="text-primary text-sm font-semibold tracking-wider mb-4 block">
             ❓ DÚVIDAS

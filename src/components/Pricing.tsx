@@ -15,7 +15,7 @@ const features = [
 
 export const Pricing = () => {
   return (
-    <section id="pricing" className="py-20 sm:py-32 relative overflow-hidden">
+    <section id="pricing" className="py-12 sm:py-20 relative overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -24,7 +24,7 @@ export const Pricing = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12 sm:mb-16"
+          className="text-center mb-8 sm:mb-12"
         >
           <span className="text-primary text-sm font-semibold tracking-wider mb-4 block">
             🎉 ACESSO GRATUITO
