@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -311,7 +311,15 @@ const Auth = () => {
         </div>
 
         <p className="text-center text-muted-foreground text-xs mt-4">
-          Ao continuar, você concorda com nossos Termos e Política de Privacidade
+          Ao continuar, você concorda com nossos{" "}
+          <Link to="/termos" className="text-primary hover:underline">
+            Termos
+          </Link>{" "}
+          e{" "}
+          <Link to="/privacidade" className="text-primary hover:underline">
+            Política de Privacidade
+          </Link>
+          .
         </p>
       </motion.div>
     </div>
