@@ -15,6 +15,8 @@ import Configuracoes from "./pages/Configuracoes";
 import Instalar from "./pages/Instalar";
 import Admin from "./pages/Admin";
 import AdminCron from "./pages/AdminCron";
+import Privacidade from "./pages/Privacidade";
+import Termos from "./pages/Termos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,8 @@ const AppRoutes = () => {
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/instalar" element={<Instalar />} />
+      <Route path="/privacidade" element={<Privacidade />} />
+      <Route path="/termos" element={<Termos />} />
       <Route
         path="/dashboard"
         element={
