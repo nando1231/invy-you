@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   User, 
   Plus, 
   Trash2,
   Palette,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,11 +42,15 @@ interface Category {
 }
 
 const Configuracoes = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Category form
   const [categoryName, setCategoryName] = useState("");
@@ -101,6 +117,25 @@ const Configuracoes = () => {
       toast({ title: "Erro ao atualizar perfil", variant: "destructive" });
     } else {
       toast({ title: "Perfil atualizado!" });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "EXCLUIR") return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      toast({ title: "Conta excluída", description: "Todos os seus dados foram removidos." });
+      await signOut();
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      toast({
+        title: "Erro ao excluir conta",
+        description: err?.message || "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
     }
   };
 
@@ -262,6 +297,73 @@ const Configuracoes = () => {
             </div>
           )}
         </motion.div>
+
+        {/* Danger Zone */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="glass rounded-xl p-4 sm:p-6 border border-destructive/40"
+        >
+          <div className="flex items-center gap-2 sm:gap-3 mb-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-destructive/10">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
+            </div>
+            <h2 className="font-bold text-destructive text-sm sm:text-base">Zona de Perigo</h2>
+          </div>
+          <p className="text-muted-foreground text-sm mb-4">
+            Excluir sua conta é uma ação <strong>permanente</strong>. Todos os seus dados
+            (transações, metas, hábitos, tarefas, categorias, conversas com a IA Invy e perfil)
+            serão apagados de forma definitiva.
+          </p>
+          <Button
+            variant="destructive"
+            onClick={() => { setDeleteConfirm(""); setDeleteDialogOpen(true); }}
+            className="w-full sm:w-auto"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Excluir minha conta
+          </Button>
+        </motion.div>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="bg-card border-destructive/40">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                Excluir conta permanentemente?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <span className="block">
+                  Essa ação não pode ser desfeita. Todos os seus dados serão apagados em
+                  definitivo dos nossos servidores.
+                </span>
+                <span className="block">
+                  Para confirmar, digite <strong className="text-destructive">EXCLUIR</strong> no
+                  campo abaixo.
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <Input
+              autoFocus
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="Digite EXCLUIR"
+              className="bg-secondary"
+              disabled={isDeleting}
+            />
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+                disabled={deleteConfirm !== "EXCLUIR" || isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? "Excluindo..." : "Excluir conta"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
